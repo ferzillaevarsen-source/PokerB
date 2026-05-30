@@ -10,7 +10,7 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -86,43 +86,43 @@
             }
         }
     </script>
-    
+
     <style>
         * {
             -webkit-tap-highlight-color: transparent;
         }
-        
-        body { 
+
+        body {
             font-family: 'Inter', sans-serif;
             scroll-behavior: smooth;
         }
-        
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-        
+
         ::-webkit-scrollbar-track {
             background: rgba(148, 163, 184, 0.1);
             border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #6366f1, #8b5cf6);
             border-radius: 10px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, #4f46e5, #7c3aed);
         }
-        
+
         .dark ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
         }
-        
+
         [x-cloak] { display: none !important; }
-        
+
         /* Theme Variables */
         .theme-default {
             --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -130,21 +130,21 @@
             --accent: #6366f1;
             --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
         }
-        
+
         .theme-cyberpunk {
             --bg-primary: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
             --bg-secondary: rgba(26, 26, 46, 0.95);
             --accent: #00f5ff;
             --accent-gradient: linear-gradient(135deg, #00f5ff, #ff00ff);
         }
-        
+
         .theme-poker {
             --bg-primary: linear-gradient(135deg, #0d5c2e 0%, #1a7f47 50%, #2d8f5e 100%);
             --bg-secondary: rgba(255, 255, 255, 0.95);
             --accent: #ffd700;
             --accent-gradient: linear-gradient(135deg, #ffd700, #ff8c00);
         }
-        
+
         /* Glass Panel Enhanced */
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
@@ -152,46 +152,46 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-        
+
         .dark .glass-panel {
             background: rgba(30, 41, 59, 0.95);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        
+
         .theme-cyberpunk .glass-panel {
             background: rgba(10, 10, 15, 0.9);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(0, 245, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 245, 255, 0.1);
         }
-        
+
         .theme-poker .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             border: 2px solid rgba(255, 215, 0, 0.3);
             box-shadow: 0 8px 32px rgba(13, 92, 46, 0.3);
         }
-        
+
         /* Animated Background */
         .animated-bg {
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
             animation: gradient 15s ease infinite;
         }
-        
+
         @keyframes gradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        
+
         /* Stat Card Enhanced */
-        .stat-card { 
+        .stat-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
-        
+
         .stat-card::before {
             content: '';
             position: absolute;
@@ -202,30 +202,30 @@
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
             transition: left 0.5s;
         }
-        
+
         .stat-card:hover::before {
             left: 100%;
         }
-        
+
         .stat-card:hover {
             transform: translateY(-8px) scale(1.02);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        
+
         .dark .stat-card:hover {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        
+
         /* Loading Spinner */
-        .loading-spinner { 
-            animation: spin 1s linear infinite; 
+        .loading-spinner {
+            animation: spin 1s linear infinite;
         }
-        
-        @keyframes spin { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        
+
         /* Gradient Text Enhanced */
         .gradient-text {
             background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
@@ -235,13 +235,13 @@
             background-clip: text;
             animation: gradientShift 3s ease infinite;
         }
-        
+
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        
+
         .theme-cyberpunk .gradient-text {
             background: linear-gradient(135deg, #00f5ff, #ff00ff, #8b5cf6);
             background-size: 200% 200%;
@@ -249,7 +249,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
+
         .theme-poker .gradient-text {
             background: linear-gradient(135deg, #ffd700, #ff8c00, #dc2626);
             background-size: 200% 200%;
@@ -257,7 +257,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        
+
         /* Button Styles */
         .btn-primary {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
@@ -265,7 +265,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .btn-primary::after {
             content: '';
             position: absolute;
@@ -278,38 +278,38 @@
             transform: translate(-50%, -50%);
             transition: width 0.6s, height 0.6s;
         }
-        
+
         .btn-primary:hover::after {
             width: 300px;
             height: 300px;
         }
-        
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
         }
-        
+
         .theme-cyberpunk .btn-primary {
             background: linear-gradient(135deg, #00f5ff 0%, #ff00ff 100%);
         }
-        
+
         .theme-cyberpunk .btn-primary:hover {
             box-shadow: 0 10px 40px rgba(0, 245, 255, 0.4);
         }
-        
+
         .theme-poker .btn-primary {
             background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
         }
-        
+
         .theme-poker .btn-primary:hover {
             box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4);
         }
-        
+
         /* Card Glow Effect */
         .card-glow {
             position: relative;
         }
-        
+
         .card-glow::before {
             content: '';
             position: absolute;
@@ -322,49 +322,49 @@
             transition: opacity 0.3s;
             animation: gradient 3s ease infinite;
         }
-        
+
         .card-glow:hover::before {
             opacity: 0.7;
         }
-        
+
         .theme-cyberpunk .card-glow::before {
             background: linear-gradient(45deg, #00f5ff, #ff00ff, #8b5cf6, #00f5ff);
         }
-        
+
         .theme-poker .card-glow::before {
             background: linear-gradient(45deg, #ffd700, #ff8c00, #dc2626, #ffd700);
         }
-        
+
         /* Table Container */
         .table-container::-webkit-scrollbar {
             height: 8px;
         }
-        
+
         .table-container::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.1);
             border-radius: 4px;
         }
-        
+
         .table-container::-webkit-scrollbar-thumb {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 4px;
         }
-        
+
         .dark .table-container::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.1);
         }
-        
+
         .dark .table-container::-webkit-scrollbar-thumb {
             background: rgba(255, 255, 255, 0.3);
         }
-        
+
         /* Input Focus Effects */
         input:focus, select:focus {
             outline: none;
             ring: 2px;
             ring-color: #6366f1;
         }
-        
+
         /* Floating Action Bar */
         .action-bar {
             backdrop-filter: blur(20px) saturate(180%);
@@ -372,31 +372,31 @@
             border-top: 1px solid rgba(99, 102, 241, 0.2);
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
         }
-        
+
         .dark .action-bar {
             background: rgba(15, 23, 42, 0.95);
             border-top: 1px solid rgba(99, 102, 241, 0.3);
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
         }
-        
+
         /* Icon Animations */
         .icon-float {
             animation: float 3s ease-in-out infinite;
         }
-        
+
         /* Neon Glow for Dark Mode */
         .neon-glow {
             text-shadow: 0 0 10px rgba(99, 102, 241, 0.5),
                          0 0 20px rgba(99, 102, 241, 0.3),
                          0 0 30px rgba(99, 102, 241, 0.2);
         }
-        
+
         .theme-cyberpunk .neon-glow {
             text-shadow: 0 0 10px rgba(0, 245, 255, 0.8),
                          0 0 20px rgba(0, 245, 255, 0.5),
                          0 0 30px rgba(255, 0, 255, 0.3);
         }
-        
+
         /* Particle Background */
         .particle {
             position: absolute;
@@ -404,54 +404,54 @@
             border-radius: 50%;
             pointer-events: none;
         }
-        
+
         .theme-cyberpunk .particle {
             background: radial-gradient(circle, rgba(0, 245, 255, 0.3) 0%, transparent 70%);
         }
-        
+
         .theme-poker .particle {
             background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
         }
-        
+
         /* Toast Notification */
         .toast {
             animation: slideInRight 0.3s ease-out, slideOutRight 0.3s ease-in 2.7s;
         }
-        
+
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
+
         @keyframes slideOutRight {
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
-        
+
         /* Modal Backdrop */
         .modal-backdrop {
             backdrop-filter: blur(8px);
             background: rgba(0, 0, 0, 0.6);
         }
-        
+
         /* Progress Bar Animation */
         .progress-bar {
             background: linear-gradient(90deg, #6366f1, #8b5cf6, #d946ef);
             background-size: 200% 100%;
             animation: shimmer 2s infinite;
         }
-        
+
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
+
         /* Chip Design */
         .chip {
             position: relative;
             overflow: hidden;
         }
-        
+
         .chip::before {
             content: '';
             position: absolute;
@@ -463,22 +463,22 @@
             background-size: 200% 200%;
             animation: chipShine 3s ease infinite;
         }
-        
+
         @keyframes chipShine {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        
+
         /* Sidebar Styles */
         .sidebar {
             transition: transform 0.3s ease;
         }
-        
+
         /* Dropdown Animation */
         .dropdown-enter {
             animation: slideDown 0.3s ease-out;
         }
-        
+
         /* Accordion Transition */
         .accordion-content {
             transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
@@ -486,39 +486,39 @@
             opacity: 0;
             overflow: hidden;
         }
-        
+
         .accordion-content.open {
             max-height: 1000px;
             opacity: 1;
         }
-        
+
         /* Theme Selector */
         .theme-option {
             transition: all 0.3s ease;
         }
-        
+
         .theme-option:hover {
             transform: scale(1.05);
         }
-        
+
         .theme-option.active {
             ring: 3px;
             ring-color: #6366f1;
         }
-        
+
         /* Mobile Menu */
         .mobile-menu {
             transform: translateX(-100%);
             transition: transform 0.3s ease;
         }
-        
+
         .mobile-menu.open {
             transform: translateX(0);
         }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950 text-slate-800 dark:text-slate-200 min-h-screen pb-40 transition-all duration-500 overflow-x-hidden theme-default">
-    
+
     <!-- Animated Background Particles -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="particle w-96 h-96 -top-48 -left-48 opacity-20 animate-pulse-slow"></div>
@@ -527,7 +527,7 @@
     </div>
 
     <div x-data="pokerApp()" x-init="initApp()" class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        
+
         <!-- Header Enhanced -->
         <header class="text-center mb-12 animate-slide-up">
             <div class="flex justify-end mb-6">
@@ -535,17 +535,17 @@
                     <i class="fa-solid transition-all duration-300" :class="darkMode ? 'fa-sun text-yellow-500 rotate-180' : 'fa-moon text-slate-600'"></i>
                 </button>
             </div>
-            
+
             <!-- Logo with Glow -->
             <div class="inline-flex items-center justify-center p-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl mb-6 icon-float card-glow">
                 <i class="fa-solid fa-chart-line text-white text-5xl"></i>
             </div>
-            
+
             <h1 class="text-5xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-3">
                 Poker Bankroll <span class="gradient-text">Manager</span>
             </h1>
             <p class="text-lg text-slate-500 dark:text-slate-400 mt-2 font-medium">Профессиональный учет МТТ результатов</p>
-            
+
             <!-- Exchange Rate Enhanced -->
             <div class="mt-6 inline-flex items-center gap-3 bg-white/80 dark:bg-dark-800/80 px-6 py-3 rounded-2xl shadow-lg border border-slate-200/50 dark:border-dark-700/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
                 <div class="p-2 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl">
@@ -580,7 +580,7 @@
                         <button @click="dashboardPeriod = 'all'" :class="dashboardPeriod === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-dark-800 text-slate-600 dark:text-slate-400'" class="px-4 py-2 rounded-lg text-sm font-medium transition-all">Всего</button>
                     </div>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Profit -->
                     <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
@@ -591,7 +591,7 @@
                         <p class="text-2xl font-bold text-green-700 dark:text-green-400" x-text="formatCurrency(getDashboardProfitRUB(), 'RUB')"></p>
                         <p class="text-xs text-green-600 dark:text-green-500 mt-1" x-text="formatCurrency(getDashboardProfitUSD(), 'USD')"></p>
                     </div>
-                    
+
                     <!-- Win Rate -->
                     <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
                         <div class="flex items-center justify-between mb-3">
@@ -601,7 +601,7 @@
                         <p class="text-2xl font-bold text-blue-700 dark:text-blue-400" x-text="getDashboardWinRate() + '%'"></p>
                         <p class="text-xs text-blue-600 dark:text-blue-500 mt-1" x-text="getDashboardWinningDays() + ' из ' + getDashboardTotalDays() + ' дней'"></p>
                     </div>
-                    
+
                     <!-- Best Session -->
                     <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-5 border border-purple-200 dark:border-purple-800">
                         <div class="flex items-center justify-between mb-3">
@@ -611,7 +611,7 @@
                         <p class="text-2xl font-bold text-purple-700 dark:text-purple-400" x-text="formatCurrency(getBestSession(), 'RUB')"></p>
                         <p class="text-xs text-purple-600 dark:text-purple-500 mt-1" x-text="formatDate(getBestSessionDate())"></p>
                     </div>
-                    
+
                     <!-- Streak -->
                     <div class="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl p-5 border border-orange-200 dark:border-orange-800">
                         <div class="flex items-center justify-between mb-3">
@@ -639,19 +639,19 @@
                         <i class="fa-solid fa-plus mr-2"></i> Добавить рум
                     </button>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <template x-for="(site, index) in sites" :key="site.id">
                         <div class="bg-gradient-to-br from-slate-50 to-white dark:from-dark-800 dark:to-dark-900 rounded-xl p-5 border border-slate-200 dark:border-dark-600 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all relative">
                             <button @click="removeSite(index)" class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity" title="Удалить рум">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
-                            
+
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-lg font-bold text-slate-800 dark:text-white" x-text="site.name"></h3>
                                 <span class="text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full" x-text="site.currency"></span>
                             </div>
-                            
+
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-slate-600 dark:text-slate-400">
@@ -690,10 +690,10 @@
 
         <!-- Main Grid -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            
+
             <!-- Left Column: Account Data -->
             <div class="space-y-6">
-                
+
                 <!-- Deposits Card -->
                 <div class="glass-panel rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-dark-700">
                     <div class="flex items-center justify-between mb-6">
@@ -704,7 +704,7 @@
                             <h2 class="text-xl font-bold text-slate-800 dark:text-white">Начальные депозиты</h2>
                         </div>
                     </div>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <template x-for="(site, index) in sites" :key="site.id">
                             <div class="relative">
@@ -744,7 +744,7 @@
                                     </div>
                                     <input type="number" x-model="site.currentBalance" @input="saveToStorage()" class="block w-full pl-8 pr-3 py-3 border border-slate-300 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium bg-white dark:bg-dark-800 text-slate-800 dark:text-white" placeholder="0.00">
                                 </div>
-                                
+
                                 <!-- Profit Display -->
                                 <div class="mt-3 space-y-2">
                                     <div class="flex items-center justify-between p-3 rounded-xl" :class="calculateSiteProfit(site) >= 0 ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20' : 'bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20'">
@@ -752,7 +752,7 @@
                                             <i class="fa-solid fa-arrow-trend-up mr-2" :class="calculateSiteProfit(site) >= 0 ? 'text-green-600' : 'text-red-600 rotate-180'"></i>
                                             <span class="text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Прибыль:</span>
                                         </div>
-                                        <span class="text-base lg:text-lg font-bold text-right break-all" 
+                                        <span class="text-base lg:text-lg font-bold text-right break-all"
                                               :class="calculateSiteProfit(site) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
                                               :style="Math.abs(calculateSiteProfit(site)) > 100000 ? 'font-size: 0.875rem;' : ''"
                                               x-text="formatCurrency(calculateSiteProfit(site), site.currency)"></span>
@@ -768,7 +768,7 @@
                             </div>
                         </template>
                     </div>
-                    
+
                     <!-- Formula Explanation -->
                     <div class="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
                         <div class="flex items-start">
@@ -818,7 +818,7 @@
 
             <!-- Right Column: Statistics & History -->
             <div class="space-y-6">
-                
+
                 <!-- Stats Tabs -->
                 <div class="glass-panel rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-dark-700 overflow-visible">
                     <div class="flex items-center justify-between mb-6">
@@ -937,7 +937,7 @@
 
         <!-- Summary Stats Cards -->
         <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            
+
             <div class="stat-card relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-xl">
                 <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
                 <div class="flex items-center justify-between mb-4">
@@ -1042,13 +1042,13 @@
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Выберите дату:</label>
                         <input type="date" x-model="selectedDate" class="w-full px-4 py-3 border border-slate-300 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-dark-700 text-slate-800 dark:text-white">
                     </div>
-                    
+
                     <div class="flex gap-3 pt-4">
                         <button @click="saveSessionWithDate()" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all">
                             <i class="fa-solid fa-check mr-2"></i> Сохранить
@@ -1073,13 +1073,13 @@
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Название рума:</label>
                         <input type="text" x-model="newRoomName" class="w-full px-4 py-3 border border-slate-300 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-dark-700 text-slate-800 dark:text-white" placeholder="Например: GGPoker">
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Валюта:</label>
                         <select x-model="newRoomCurrency" class="w-full px-4 py-3 border border-slate-300 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-dark-700 text-slate-800 dark:text-white">
@@ -1088,7 +1088,7 @@
                             <option value="EUR">EUR (Евро)</option>
                         </select>
                     </div>
-                    
+
                     <div class="flex gap-3 pt-4">
                         <button @click="addNewRoom()" class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all">
                             <i class="fa-solid fa-check mr-2"></i> Добавить
@@ -1143,13 +1143,13 @@
                         this.lastRateUpdate = parsed.lastRateUpdate || '';
                         this.darkMode = parsed.darkMode || false;
                     }
-                    
+
                     if (this.darkMode) {
                         document.documentElement.classList.add('dark');
                     }
-                    
+
                     await this.fetchExchangeRate();
-                    
+
                     this.$nextTick(() => {
                         this.initChart();
                     });
@@ -1280,7 +1280,7 @@
                 getDashboardProfitRUB() {
                     const sessions = this.getDailySessionsWithDelta();
                     const now = new Date();
-                    
+
                     return sessions.filter(s => {
                         const sessionDate = new Date(s.date);
                         if (this.dashboardPeriod === 'today') {
@@ -1298,7 +1298,7 @@
                 getDashboardProfitUSD() {
                     const sessions = this.getDailySessionsWithDelta();
                     const now = new Date();
-                    
+
                     return sessions.filter(s => {
                         const sessionDate = new Date(s.date);
                         if (this.dashboardPeriod === 'today') {
@@ -1316,7 +1316,7 @@
                 getDashboardWinRate() {
                     const sessions = this.getDailySessionsWithDelta();
                     const now = new Date();
-                    
+
                     const filtered = sessions.filter(s => {
                         const sessionDate = new Date(s.date);
                         if (this.dashboardPeriod === 'today') {
@@ -1329,7 +1329,7 @@
                         }
                         return true;
                     });
-                    
+
                     if (filtered.length === 0) return 0;
                     const winning = filtered.filter(s => s.profitRUBDelta > 0).length;
                     return ((winning / filtered.length) * 100).toFixed(1);
@@ -1338,7 +1338,7 @@
                 getDashboardWinningDays() {
                     const sessions = this.getDailySessionsWithDelta();
                     const now = new Date();
-                    
+
                     return sessions.filter(s => {
                         const sessionDate = new Date(s.date);
                         if (this.dashboardPeriod === 'today') {
@@ -1356,7 +1356,7 @@
                 getDashboardTotalDays() {
                     const sessions = this.getDailySessionsWithDelta();
                     const now = new Date();
-                    
+
                     return sessions.filter(s => {
                         const sessionDate = new Date(s.date);
                         if (this.dashboardPeriod === 'today') {
@@ -1378,7 +1378,7 @@
 
                 getBestSessionDate() {
                     if (this.history.length === 0) return null;
-                    const best = this.history.reduce((max, s) => 
+                    const best = this.history.reduce((max, s) =>
                         parseFloat(s.profitRUB) > parseFloat(max.profitRUB) ? s : max
                     );
                     return best.date;
@@ -1386,11 +1386,11 @@
 
                 getCurrentStreak() {
                     if (this.history.length === 0) return 0;
-                    
+
                     const sorted = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
                     const lastProfit = parseFloat(sorted[0].profitRUB) || 0;
                     const isPositive = lastProfit >= 0;
-                    
+
                     let streak = 0;
                     for (let session of sorted) {
                         const profit = parseFloat(session.profitRUB) || 0;
@@ -1400,13 +1400,13 @@
                             break;
                         }
                     }
-                    
+
                     return (isPositive ? '+' : '') + streak;
                 },
 
                 getRoomBankrollShare(site) {
                     if (this.totalBankrollRUB === 0) return 0;
-                    const siteBankrollRUB = site.currency === 'RUB' 
+                    const siteBankrollRUB = site.currency === 'RUB'
                         ? (parseFloat(site.currentBalance) || 0)
                         : ((parseFloat(site.currentBalance) || 0) * this.exchangeRate);
                     return ((siteBankrollRUB / this.totalBankrollRUB) * 100).toFixed(1);
@@ -1414,10 +1414,10 @@
 
                 getDailySessions() {
                     const dailyMap = new Map();
-                    
+
                     this.history.forEach(session => {
                         const dateKey = new Date(session.date).toLocaleDateString('ru-RU');
-                        
+
                         if (!dailyMap.has(dateKey) || new Date(session.date) > new Date(dailyMap.get(dateKey).date)) {
                             dailyMap.set(dateKey, {
                                 ...session,
@@ -1429,32 +1429,32 @@
                             });
                         }
                     });
-                    
+
                     return Array.from(dailyMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
                 },
 
                 getDailySessionsWithDelta() {
                     const sessions = this.getDailySessions();
-                    
+
                     return sessions.map((session, index) => {
                         let prevSession = null;
                         if (index > 0) {
                             prevSession = sessions[index - 1];
                         }
-                        
+
                         return {
                             ...session,
-                            profitRUBDelta: prevSession 
-                                ? session.totalProfitRUB - prevSession.totalProfitRUB 
+                            profitRUBDelta: prevSession
+                                ? session.totalProfitRUB - prevSession.totalProfitRUB
                                 : session.totalProfitRUB,
-                            profitUSDDelta: prevSession 
-                                ? session.totalProfitUSD - prevSession.totalProfitUSD 
+                            profitUSDDelta: prevSession
+                                ? session.totalProfitUSD - prevSession.totalProfitUSD
                                 : session.totalProfitUSD,
-                            withdrawalsRUBDelta: prevSession 
-                                ? session.totalWithdrawalsRUB - prevSession.totalWithdrawalsRUB 
+                            withdrawalsRUBDelta: prevSession
+                                ? session.totalWithdrawalsRUB - prevSession.totalWithdrawalsRUB
                                 : session.totalWithdrawalsRUB,
-                            withdrawalsUSDDelta: prevSession 
-                                ? session.totalWithdrawalsUSD - prevSession.totalWithdrawalsUSD 
+                            withdrawalsUSDDelta: prevSession
+                                ? session.totalWithdrawalsUSD - prevSession.totalWithdrawalsUSD
                                 : session.totalWithdrawalsUSD
                         };
                     });
@@ -1492,16 +1492,16 @@
 
                 getMonthlyStats() {
                     if (this.history.length === 0) return [];
-                    
+
                     const dailySessions = this.getDailySessionsWithDelta();
-                    
+
                     const grouped = {};
-                    
+
                     dailySessions.forEach(session => {
                         const date = new Date(session.date);
                         const monthKey = `${date.getMonth()}-${date.getFullYear()}`;
                         const monthLabel = date.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
-                        
+
                         if (!grouped[monthKey]) {
                             grouped[monthKey] = {
                                 label: monthLabel,
@@ -1512,14 +1512,14 @@
                                 withdrawalsUSD: 0
                             };
                         }
-                        
+
                         grouped[monthKey].sessions += 1;
                         grouped[monthKey].profitRUB += session.profitRUBDelta || 0;
                         grouped[monthKey].profitUSD += session.profitUSDDelta || 0;
                         grouped[monthKey].withdrawalsRUB += session.withdrawalsRUBDelta || 0;
                         grouped[monthKey].withdrawalsUSD += session.withdrawalsUSDDelta || 0;
                     });
-                    
+
                     return Object.values(grouped).reverse();
                 },
 
@@ -1549,17 +1549,17 @@
                 initChart() {
                     const ctx = document.getElementById('statsChart');
                     if (!ctx) return;
-                    
+
                     if (this.chart) this.chart.destroy();
-                    
+
                     const dailySessions = this.getDailySessionsWithDelta().slice(-10);
                     const labels = dailySessions.map(s => this.formatDate(s.date));
                     const data = dailySessions.map(s => s.profitRUBDelta || 0);
-                    
+
                     const isDark = document.documentElement.classList.contains('dark');
                     const textColor = isDark ? '#94a3b8' : '#64748b';
                     const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-                    
+
                     this.chart = new Chart(ctx, {
                         type: 'line',
                         data: {
@@ -1631,7 +1631,7 @@
                         this.showNotification('Выберите дату!', 'error');
                         return;
                     }
-                    
+
                     const selectedDateTime = new Date(this.selectedDate).toISOString();
                     const dateKey = new Date(this.selectedDate).toLocaleDateString('ru-RU');
                     this.saveSessionForDate(selectedDateTime, dateKey);
@@ -1643,7 +1643,7 @@
                         const sessionDateKey = new Date(s.date).toLocaleDateString('ru-RU');
                         return sessionDateKey === dateKey;
                     });
-                    
+
                     if (existingSession) {
                         if (!confirm('Запись за эту дату уже существует. Перезаписать?')) {
                             return;
@@ -1653,7 +1653,7 @@
                             return sessionDateKey !== dateKey;
                         });
                     }
-                    
+
                     const currentWithdrawals = this.sites.map(site => ({
                         site: site.name,
                         currency: site.currency,
@@ -1669,9 +1669,9 @@
                         withdrawals: currentWithdrawals,
                         sites: JSON.parse(JSON.stringify(this.sites))
                     };
-                    
+
                     this.history.push(sessionData);
-                    
+
                     this.saveToStorage();
                     this.$nextTick(() => this.initChart());
                     this.showNotification('Сессия сохранена!', 'success');
@@ -1679,12 +1679,12 @@
 
                 saveNextDay() {
                     const tomorrowKey = this.getTomorrowKey();
-                    
+
                     const existingTomorrow = this.history.find(s => {
                         const sessionDateKey = new Date(s.date).toLocaleDateString('ru-RU');
                         return sessionDateKey === tomorrowKey;
                     });
-                    
+
                     if (existingTomorrow) {
                         if (!confirm('Запись за завтра уже существует. Перезаписать?')) {
                             return;
@@ -1694,7 +1694,7 @@
                             return sessionDateKey !== tomorrowKey;
                         });
                     }
-                    
+
                     const currentWithdrawals = this.sites.map(site => ({
                         site: site.name,
                         currency: site.currency,
@@ -1710,9 +1710,9 @@
                         withdrawals: currentWithdrawals,
                         sites: JSON.parse(JSON.stringify(this.sites))
                     };
-                    
+
                     this.history.push(sessionData);
-                    
+
                     this.saveToStorage();
                     this.$nextTick(() => this.initChart());
                     this.showNotification('Следующий день сохранён!', 'success');
@@ -1733,7 +1733,7 @@
                             totalBankrollUSD: this.totalBankrollUSD
                         }
                     };
-                    
+
                     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -1741,41 +1741,41 @@
                     a.download = `poker-bankroll-backup-${new Date().toISOString().split('T')[0]}.json`;
                     a.click();
                     URL.revokeObjectURL(url);
-                    
+
                     this.showNotification('Бэкап создан!', 'success');
                 },
 
                 deleteSessionByDate(dateString) {
                     const dateKey = new Date(dateString).toLocaleDateString('ru-RU');
-                    
+
                     const sessionToDelete = this.history.find(s => {
                         const sessionDateKey = new Date(s.date).toLocaleDateString('ru-RU');
                         return sessionDateKey === dateKey;
                     });
-                    
+
                     if (!sessionToDelete) {
                         this.showNotification('Сессия не найдена', 'error');
                         return;
                     }
-                    
+
                     if (!confirm(`Удалить сессию за ${dateKey}? Текущие баланс и выводы будут обновлены до состояния предыдущего дня.`)) {
                         return;
                     }
-                    
+
                     const sortedHistory = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
                     const sessionIndex = sortedHistory.findIndex(s => {
                         const sessionDateKey = new Date(s.date).toLocaleDateString('ru-RU');
                         return sessionDateKey === dateKey;
                     });
-                    
+
                     this.history = this.history.filter(s => {
                         const sessionDateKey = new Date(s.date).toLocaleDateString('ru-RU');
                         return sessionDateKey !== dateKey;
                     });
-                    
+
                     if (sessionIndex < sortedHistory.length - 1 && sortedHistory[sessionIndex + 1]) {
                         const previousSession = sortedHistory[sessionIndex + 1];
-                        
+
                         if (previousSession.sites) {
                             previousSession.sites.forEach((savedSite, index) => {
                                 if (this.sites[index]) {
@@ -1786,7 +1786,7 @@
                             });
                         }
                     }
-                    
+
                     this.saveToStorage();
                     this.$nextTick(() => this.initChart());
                     this.showNotification('Сессия удалена! Данные восстановлены.', 'success');
@@ -1796,19 +1796,19 @@
                     if (!confirm(`Удалить все сессии за ${monthLabel}? Это действие нельзя отменить.`)) {
                         return;
                     }
-                    
+
                     const [month, year] = monthLabel.split(' ');
                     const monthNames = {
                         'январь': 0, 'февраль': 1, 'март': 2, 'апрель': 3, 'май': 4, 'июнь': 5,
                         'июль': 6, 'август': 7, 'сентябрь': 8, 'октябрь': 9, 'ноябрь': 10, 'декабрь': 11
                     };
                     const monthIndex = monthNames[month.toLowerCase()];
-                    
+
                     this.history = this.history.filter(s => {
                         const date = new Date(s.date);
                         return !(date.getMonth() === monthIndex && date.getFullYear().toString() === year);
                     });
-                    
+
                     this.saveToStorage();
                     this.$nextTick(() => this.initChart());
                     this.showNotification(`Все сессии за ${monthLabel} удалены!`, 'success');
@@ -1819,9 +1819,9 @@
                         this.showNotification('Введите название рума!', 'error');
                         return;
                     }
-                    
+
                     const newId = Math.max(...this.sites.map(s => s.id), 0) + 1;
-                    
+
                     this.sites.push({
                         id: newId,
                         name: this.newRoomName.trim(),
@@ -1831,7 +1831,7 @@
                         totalWithdrawals: 0,
                         newWithdrawal: ''
                     });
-                    
+
                     this.newRoomName = '';
                     this.newRoomCurrency = 'USD';
                     this.showAddRoomModal = false;
@@ -1844,7 +1844,7 @@
                         this.showNotification('Нельзя удалить последний рум!', 'error');
                         return;
                     }
-                    
+
                     if (confirm(`Удалить рум "${this.sites[index].name}"?`)) {
                         this.sites.splice(index, 1);
                         this.saveToStorage();
@@ -1866,11 +1866,11 @@
                 exportData(format) {
                     if (format === 'excel') {
                         const dailySessions = this.getDailySessionsWithDelta();
-                        
+
                         const excelData = [
                             ['Дата', 'Прибыль (RUB)', 'Прибыль (USD)', 'Выводы (RUB)', 'Выводы (USD)', 'Курс USD/RUB']
                         ];
-                        
+
                         dailySessions.forEach(s => {
                             excelData.push([
                                 this.formatDate(s.date),
@@ -1881,13 +1881,13 @@
                                 parseFloat(s.exchangeRate || this.exchangeRate)
                             ]);
                         });
-                        
+
                         excelData.push([]);
                         excelData.push(['ИТОГО', this.totalProfitRUB.toFixed(2), this.totalProfitUSD.toFixed(2), this.totalWithdrawalsRUB.toFixed(2), this.totalWithdrawalsUSD.toFixed(2), '']);
-                        
+
                         const wb = XLSX.utils.book_new();
                         const ws = XLSX.utils.aoa_to_sheet(excelData);
-                        
+
                         ws['!cols'] = [
                             { wch: 15 },
                             { wch: 28 },
@@ -1896,7 +1896,7 @@
                             { wch: 28 },
                             { wch: 15 }
                         ];
-                        
+
                         const range = XLSX.utils.decode_range(ws['!ref']);
                         for (let C = range.s.c; C <= range.e.c; ++C) {
                             const address = XLSX.utils.encode_col(C) + "1";
@@ -1907,7 +1907,7 @@
                                 alignment: { horizontal: "center" }
                             };
                         }
-                        
+
                         XLSX.utils.book_append_sheet(wb, ws, "Статистика");
                         XLSX.writeFile(wb, `Poker_Bankroll_${new Date().toISOString().split('T')[0]}.xlsx`);
                         this.showNotification('Excel файл создан!', 'success');

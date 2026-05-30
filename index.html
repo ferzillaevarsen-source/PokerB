@@ -144,6 +144,13 @@
             --accent-gradient: linear-gradient(135deg, #ffd700, #ff8c00);
         }
         
+        .theme-blue {
+            --bg-primary: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+            --bg-secondary: rgba(255, 255, 255, 0.95);
+            --accent: #3b82f6;
+            --accent-gradient: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+        
         /* Glass Panel Enhanced */
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
@@ -169,6 +176,12 @@
             background: rgba(255, 255, 255, 0.95);
             border: 2px solid rgba(255, 215, 0, 0.3);
             box-shadow: 0 8px 32px rgba(13, 92, 46, 0.3);
+        }
+        
+        .theme-blue .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
         }
         
         /* Animated Background */
@@ -257,6 +270,14 @@
             background-clip: text;
         }
         
+        .theme-blue .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8, #60a5fa);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
         /* Button Styles */
         .btn-primary {
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
@@ -304,6 +325,14 @@
             box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4);
         }
         
+        .theme-blue .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        
+        .theme-blue .btn-primary:hover {
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+        }
+        
         /* Card Glow Effect */
         .card-glow {
             position: relative;
@@ -332,6 +361,10 @@
         
         .theme-poker .card-glow::before {
             background: linear-gradient(45deg, #ffd700, #ff8c00, #dc2626, #ffd700);
+        }
+        
+        .theme-blue .card-glow::before {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8, #60a5fa, #3b82f6);
         }
         
         /* Table Container */
@@ -396,6 +429,18 @@
                          0 0 30px rgba(255, 0, 255, 0.3);
         }
         
+        .theme-poker .neon-glow {
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8),
+                         0 0 20px rgba(255, 215, 0, 0.5),
+                         0 0 30px rgba(220, 38, 38, 0.3);
+        }
+        
+        .theme-blue .neon-glow {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.8),
+                         0 0 20px rgba(59, 130, 246, 0.5),
+                         0 0 30px rgba(30, 58, 138, 0.3);
+        }
+        
         /* Particle Background */
         .particle {
             position: absolute;
@@ -410,6 +455,10 @@
         
         .theme-poker .particle {
             background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+        }
+        
+        .theme-blue .particle {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
         }
         
         /* Toast Notification */
@@ -529,7 +578,72 @@
         
         <!-- Header Enhanced -->
         <header class="text-center mb-12 animate-slide-up">
-            <div class="flex justify-end mb-6">
+            <div class="flex justify-end gap-4 mb-6">
+                <!-- Theme Selector -->
+                <div class="relative" x-data="{ showThemeMenu: false }">
+                    <button @click="showThemeMenu = !showThemeMenu" class="group p-4 rounded-2xl bg-white/80 dark:bg-dark-800/80 shadow-lg hover:shadow-2xl transition-all duration-300 backdrop-blur-sm border border-slate-200/50 dark:border-dark-700/50 hover:scale-110">
+                        <i class="fa-solid fa-palette transition-all duration-300 text-indigo-600 dark:text-cyan-400"></i>
+                    </button>
+                    
+                    <!-- Theme Dropdown -->
+                    <div x-show="showThemeMenu" 
+                         @click.away="showThemeMenu = false"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                         class="absolute right-0 mt-2 w-64 glass-panel rounded-2xl shadow-2xl z-50 overflow-hidden">
+                        <div class="p-4">
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group"></i> Тема оформления
+                            </h3>
+                            <div class="space-y-2">
+                                <!-- Neon Theme -->
+                                <button @click="setTheme('neon'); showThemeMenu = false" 
+                                        :class="currentTheme === 'neon' ? 'ring-2 ring-cyan-400 bg-cyan-500/20' : 'hover:bg-slate-100 dark:hover:bg-dark-800'"
+                                        class="w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 group">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 via-fuchsia-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-cyan-500/50 transition-shadow">
+                                        <i class="fa-solid fa-bolt text-white text-sm"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Неоновая</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Cyberpunk стиль</p>
+                                    </div>
+                                </button>
+                                
+                                <!-- Blue Theme -->
+                                <button @click="setTheme('blue'); showThemeMenu = false" 
+                                        :class="currentTheme === 'blue' ? 'ring-2 ring-blue-500 bg-blue-500/20' : 'hover:bg-slate-100 dark:hover:bg-dark-800'"
+                                        class="w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 group">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-blue-500/50 transition-shadow">
+                                        <i class="fa-solid fa-droplet text-white text-sm"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Синяя тема</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Классический стиль</p>
+                                    </div>
+                                </button>
+                                
+                                <!-- Poker Theme -->
+                                <button @click="setTheme('poker'); showThemeMenu = false" 
+                                        :class="currentTheme === 'poker' ? 'ring-2 ring-yellow-500 bg-yellow-500/20' : 'hover:bg-slate-100 dark:hover:bg-dark-800'"
+                                        class="w-full p-3 rounded-xl transition-all duration-300 flex items-center gap-3 group">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-600 via-yellow-500 to-red-600 flex items-center justify-center shadow-lg group-hover:shadow-yellow-500/50 transition-shadow">
+                                        <i class="fa-solid fa-spade text-white text-sm"></i>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-semibold text-slate-800 dark:text-slate-200 text-sm">Покерная</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Стиль казино</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dark Mode Toggle -->
                 <button @click="toggleDarkMode()" class="group p-4 rounded-2xl bg-white/80 dark:bg-dark-800/80 shadow-lg hover:shadow-2xl transition-all duration-300 backdrop-blur-sm border border-slate-200/50 dark:border-dark-700/50 hover:scale-110">
                     <i class="fa-solid transition-all duration-300" :class="darkMode ? 'fa-sun text-yellow-500 rotate-180' : 'fa-moon text-slate-600'"></i>
                 </button>
@@ -1034,6 +1148,7 @@
                 lastRateUpdate: '',
                 statsView: 'days',
                 darkMode: false,
+                currentTheme: 'default',
                 history: [],
                 showDateModal: false,
                 showAddRoomModal: false,
@@ -1063,13 +1178,49 @@
                         this.history = parsed.history || [];
                         this.lastRateUpdate = parsed.lastRateUpdate || '';
                         this.darkMode = parsed.darkMode || false;
+                        this.currentTheme = parsed.currentTheme || 'default';
                     }
                     
                     if (this.darkMode) {
                         document.documentElement.classList.add('dark');
                     }
                     
+                    // Apply saved theme
+                    this.applyTheme(this.currentTheme, false);
+                    
                     await this.fetchExchangeRate();
+                },
+
+                setTheme(themeName) {
+                    this.currentTheme = themeName;
+                    this.applyTheme(themeName, true);
+                    this.saveToStorage();
+                },
+
+                applyTheme(themeName, showToast = false) {
+                    // Remove all theme classes
+                    document.body.classList.remove('theme-default', 'theme-cyberpunk', 'theme-poker', 'theme-blue');
+                    
+                    // Apply new theme
+                    if (themeName === 'neon') {
+                        document.body.classList.add('theme-cyberpunk');
+                    } else if (themeName === 'poker') {
+                        document.body.classList.add('theme-poker');
+                    } else if (themeName === 'blue') {
+                        document.body.classList.add('theme-blue');
+                    } else {
+                        document.body.classList.add('theme-default');
+                    }
+                    
+                    if (showToast) {
+                        const themeNames = {
+                            'neon': 'Неоновая тема применена!',
+                            'blue': 'Синяя тема применена!',
+                            'poker': 'Покерная тема применена!',
+                            'default': 'Тема по умолчанию применена!'
+                        };
+                        this.showToast(themeNames[themeName] || 'Тема применена!', 'success');
+                    }
                 },
 
                 toggleDarkMode() {
@@ -1686,7 +1837,8 @@
                         sites: this.sites,
                         history: this.history,
                         lastRateUpdate: this.lastRateUpdate,
-                        darkMode: this.darkMode
+                        darkMode: this.darkMode,
+                        currentTheme: this.currentTheme
                     };
                     localStorage.setItem('pokerBankrollData', JSON.stringify(data));
                 },

@@ -1,1 +1,47 @@
-Nothing should be ignored since only a single HTML file was added without any build artifacts, dependencies, or temporary files.
+```
+# Build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.out
+*.exe
+*.dll
+*.so
+*.a
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+*.env.*
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Distribution
+dist/
+build/
+target/
+.gradle/
+.mypy_cache/
+.pytest_cache/
+```

@@ -571,7 +571,7 @@
                             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-600 flex items-center justify-center">
                                 <i class="fa-solid fa-calendar-days text-white text-sm"></i>
                             </div>
-                            <h3 class="text-lg font-bold"> Календарь</h3>
+                            <h3 class="text-lg font-bold">📅 Календарь</h3>
                         </div>
                         <div class="flex items-center gap-2">
                             <button @click="changeMonth(-1)" class="w-7 h-7 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 flex items-center justify-center">
@@ -680,7 +680,7 @@
                         <i class="fa-solid fa-chevron-up text-sm"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <div class="dropdown-item" @click="showMissedDayModal = true">
+                        <div class="dropdown-item" @click="openMissedDayModal()">
                             <i class="fa-solid fa-calendar-plus text-purple-400"></i>
                             <span>Добавить пропущенный день</span>
                         </div>
@@ -714,7 +714,7 @@
     <!-- Missed Day Modal -->
     <div x-show="showMissedDayModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showMissedDayModal = false">
         <div class="glass rounded-3xl p-8 max-w-2xl w-full animate-slide-up max-h-[90vh] overflow-y-auto">
-            <h3 class="text-2xl font-bold mb-6"> Добавить пропущенный день</h3>
+            <h3 class="text-2xl font-bold mb-6">📅 Добавить пропущенный день</h3>
             
             <div class="mb-6">
                 <label class="block text-sm text-slate-400 mb-2">Дата:</label>
@@ -782,7 +782,7 @@
 
     <div x-show="showGoalsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showGoalsModal = false">
         <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
-            <h3 class="text-2xl font-bold mb-6"> Цели</h3>
+            <h3 class="text-2xl font-bold mb-6">🎯 Цели</h3>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-slate-400 mb-2">Цель прибыли:</label>
@@ -841,6 +841,19 @@
                         this.goals = data.goals || this.goals;
                         if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                         
+                        // ✅ Загружаем последние балансы из последней сессии
+                        if (this.history.length > 0) {
+                            const sorted = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
+                            const lastSession = sorted[0];
+                            if (lastSession.lastBalances) {
+                                this.sites.forEach(site => {
+                                    if (lastSession.lastBalances[site.id] !== undefined) {
+                                        site.currentBalance = lastSession.lastBalances[site.id];
+                                    }
+                                });
+                            }
+                        }
+                        
                         // Apply base deposits
                         this.sites.forEach(site => {
                             if (this.baseDeposits[site.id] !== undefined) {
@@ -860,7 +873,6 @@
                     this.saveToStorage();
                 },
 
-                // ✅ ИСПРАВЛЕНО: Депозиты не обнуляются после сохранения
                 saveBaseDeposits() {
                     this.sites.forEach(site => {
                         this.baseDeposits[site.id] = parseFloat(site.initialDeposit) || 0;
@@ -878,6 +890,16 @@
                         }
                     });
                     this.showNotification('🔄 Депозиты сброшены к базовым', 'info');
+                },
+
+                // ✅ Открытие модального окна с копированием данных
+                openMissedDayModal() {
+                    this.missedDaySites = this.sites.map(site => ({
+                        ...site,
+                        currentBalance: 0,
+                        newWithdrawal: ''
+                    }));
+                    this.showMissedDayModal = true;
                 },
 
                 get dashboardMetrics() {
@@ -1178,6 +1200,7 @@
                     return days;
                 },
 
+                // ✅ Сохранение с запоминанием балансов
                 saveTodaySession() {
                     const today = new Date().toISOString();
                     const todayKey = new Date().toLocaleDateString('ru-RU');
@@ -1193,11 +1216,18 @@
                         );
                     }
                     
+                    // ✅ Сохраняем текущие балансы
+                    const lastBalances = {};
+                    this.sites.forEach(site => {
+                        lastBalances[site.id] = parseFloat(site.currentBalance) || 0;
+                    });
+                    
                     this.history.push({
                         date: today,
                         profitRUB: this.totalProfitRUB.toFixed(2),
                         profitUSD: this.totalProfitUSD.toFixed(2),
                         exchangeRate: this.exchangeRate,
+                        lastBalances: lastBalances, // ✅ Сохраняем балансы
                         withdrawals: this.sites.map(s => ({ 
                             site: s.name, 
                             currency: s.currency, 
@@ -1206,15 +1236,14 @@
                         sites: JSON.parse(JSON.stringify(this.sites))
                     });
                     
-                    // Очищаем только балансы и выводы (депозиты остаются)
+                    // ✅ НЕ очищаем балансы - они остаются для следующего дня!
                     this.sites.forEach(site => {
-                        site.currentBalance = 0;
                         site.totalWithdrawals = 0;
                         site.newWithdrawal = '';
                     });
                     
                     this.saveToStorage();
-                    this.showNotification(`✅ Сессия за ${todayKey} сохранена!`, 'success');
+                    this.showNotification(`✅ Сессия за ${todayKey} сохранена! Балансы сохранены.`, 'success');
                     this.checkAlerts();
                 },
 
@@ -1249,11 +1278,13 @@
                     
                     let totalProfitRUB = 0;
                     let totalProfitUSD = 0;
+                    const lastBalances = {};
                     
                     sessionSites.forEach(site => {
                         const profit = (parseFloat(site.currentBalance) || 0) + (parseFloat(site.totalWithdrawals) || 0) - (parseFloat(site.initialDeposit) || 0);
                         if (site.currency === 'RUB') totalProfitRUB += profit;
                         else if (site.currency === 'USD') totalProfitUSD += profit;
+                        lastBalances[site.id] = parseFloat(site.currentBalance) || 0;
                     });
                     
                     this.history.push({
@@ -1261,6 +1292,7 @@
                         profitRUB: totalProfitRUB.toFixed(2),
                         profitUSD: totalProfitUSD.toFixed(2),
                         exchangeRate: this.exchangeRate,
+                        lastBalances: lastBalances,
                         withdrawals: sessionSites.map(s => ({ 
                             site: s.name, 
                             currency: s.currency, 

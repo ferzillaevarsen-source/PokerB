@@ -83,7 +83,6 @@
         .calendar-day.loss { background: linear-gradient(135deg, #EF4444, #DC2626); color: white; }
         .calendar-day.break-even { background: rgba(148, 163, 184, 0.3); color: #94A3B8; }
         .calendar-day.today { border: 2px solid #00FF88; }
-        .calendar-day.active { border: 2px solid #00D4FF; box-shadow: 0 0 8px #00D4FF; }
         .dropdown { position: relative; }
         .dropdown-menu {
             position: absolute;
@@ -138,7 +137,6 @@
             100% { background-position: 0% 50%; }
         }
         
-        /* Theme classes */
         .theme-neon .gradient-primary { background: linear-gradient(135deg, #00FF88 0%, #00D4FF 100%) !important; }
         .theme-cyberpunk .gradient-primary { background: linear-gradient(135deg, #FF00FF 0%, #00FFFF 100%) !important; }
         .theme-blue .gradient-primary { background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%) !important; }
@@ -371,7 +369,7 @@
             <!-- Left Column -->
             <div class="space-y-6 animate-slide-up" style="animation-delay: 0.7s">
                 
-                <!-- Deposits with Save/Reset buttons -->
+                <!-- Base Deposits -->
                 <div class="glass rounded-3xl p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-4">
@@ -379,16 +377,16 @@
                                 <i class="fa-solid fa-wallet text-white text-xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-2xl font-bold">Начальные депозиты</h2>
-                                <p class="text-sm text-slate-400">Постоянные значения</p>
+                                <h2 class="text-2xl font-bold">Базовые депозиты</h2>
+                                <p class="text-sm text-slate-400">Подставляются автоматически</p>
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button @click="saveDeposits()" class="px-4 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold transition-all flex items-center gap-2">
+                            <button @click="saveBaseDeposits()" class="px-4 py-2 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-save"></i>
                                 <span>Сохранить</span>
                             </button>
-                            <button @click="resetDeposits()" class="px-4 py-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold transition-all flex items-center gap-2">
+                            <button @click="resetBaseDeposits()" class="px-4 py-2 rounded-xl bg-slate-600 hover:bg-slate-700 text-white font-semibold transition-all flex items-center gap-2">
                                 <i class="fa-solid fa-rotate-left"></i>
                                 <span>Сбросить</span>
                             </button>
@@ -401,51 +399,54 @@
                                 <label class="block text-sm text-slate-400 mb-2" x-text="site.name"></label>
                                 <div class="relative">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" x-text="site.currency === 'USD' ? '$' : '₽'"></span>
-                                    <input type="number" x-model="site.initialDeposit" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all">
+                                    <input type="number" x-model="baseDeposits[site.id]" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all">
                                 </div>
                             </div>
                         </template>
                     </div>
                 </div>
 
-                <!-- Balances -->
+                <!-- Today's Session -->
                 <div class="glass rounded-3xl p-8">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-600 flex items-center justify-center">
-                                <i class="fa-solid fa-scale-balanced text-white text-xl"></i>
+                                <i class="fa-solid fa-calendar-day text-white text-xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-2xl font-bold">Баланс на конец дня</h2>
-                                <p class="text-sm text-slate-400">ПОСЛЕ всех выводов</p>
+                                <h2 class="text-2xl font-bold">Сегодняшняя сессия</h2>
+                                <p class="text-sm text-slate-400" x-text="new Date().toLocaleDateString('ru-RU')"></p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <template x-for="(site, index) in sites" :key="'bal-'+site.id">
-                            <div class="bg-slate-800/30 rounded-2xl p-4">
-                                <label class="block text-sm text-slate-400 mb-2" x-text="site.name"></label>
-                                <div class="relative mb-4">
-                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" x-text="site.currency === 'USD' ? '$' : '₽'"></span>
-                                    <input type="number" x-model="site.currentBalance" @input="markUnsaved()" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                    <!-- Balances -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Баланс на конец дня</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <template x-for="(site, index) in sites" :key="'bal-'+site.id">
+                                <div class="bg-slate-800/30 rounded-2xl p-4">
+                                    <label class="block text-sm text-slate-400 mb-2" x-text="site.name"></label>
+                                    <div class="relative mb-4">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" x-text="site.currency === 'USD' ? '$' : '₽'"></span>
+                                        <input type="number" x-model="site.currentBalance" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                                    </div>
+                                    <div class="flex justify-between items-center p-3 rounded-xl" :class="calculateSiteProfit(site) >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'">
+                                        <span class="text-sm text-slate-400">Прибыль:</span>
+                                        <span class="font-bold" :class="calculateSiteProfit(site) >= 0 ? 'text-green-400' : 'text-red-400'" x-text="formatCurrency(calculateSiteProfit(site), site.currency)"></span>
+                                    </div>
                                 </div>
-                                <div class="flex justify-between items-center p-3 rounded-xl" :class="calculateSiteProfit(site) >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'">
-                                    <span class="text-sm text-slate-400">Прибыль:</span>
-                                    <span class="font-bold" :class="calculateSiteProfit(site) >= 0 ? 'text-green-400' : 'text-red-400'" x-text="formatCurrency(calculateSiteProfit(site), site.currency)"></span>
-                                </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
                     
                     <!-- Formula -->
-                    <div class="mt-6 p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20">
+                    <div class="p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20">
                         <div class="flex items-start gap-3">
                             <i class="fa-solid fa-calculator text-indigo-400 mt-1"></i>
                             <div class="text-sm text-indigo-300">
                                 <p class="font-semibold mb-2">Формула расчета:</p>
                                 <code class="block bg-slate-900/50 px-4 py-2 rounded-lg text-xs mb-2">Прибыль = (Баланс + Выводы) − Депозит</code>
-                                <p class="text-xs opacity-75">Вывод вычитается из баланса, но не влияет на прибыль</p>
                             </div>
                         </div>
                     </div>
@@ -455,6 +456,36 @@
             <!-- Right Column -->
             <div class="space-y-6 animate-slide-up" style="animation-delay: 0.8s">
                 
+                <!-- Withdrawals -->
+                <div class="glass rounded-3xl p-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center">
+                            <i class="fa-solid fa-money-bill-transfer text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold">Выводы средств</h2>
+                            <p class="text-sm text-slate-400">Добавьте если были выводы сегодня</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <template x-for="(site, index) in sites" :key="'wd-'+site.id">
+                            <div class="bg-slate-800/30 rounded-2xl p-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="font-bold" x-text="site.name"></span>
+                                    <span class="text-xs px-3 py-1 rounded-full bg-orange-500/20 text-orange-400" x-text="'Всего: ' + formatCurrency(site.totalWithdrawals, site.currency)"></span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="number" x-model="site.newWithdrawal" @keydown.enter="addWithdrawal(site)" class="flex-1 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all" placeholder="Сумма вывода">
+                                    <button @click="addWithdrawal(site)" class="px-6 py-3 rounded-xl gradient-primary hover:opacity-90 font-semibold transition-all">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
                 <!-- Statistics -->
                 <div class="glass rounded-3xl p-8">
                     <div class="flex items-center justify-between mb-6">
@@ -496,9 +527,6 @@
                                             <td class="py-4 px-4 text-right text-blue-400" x-text="formatCurrency(session.withdrawalsRUBDelta, 'RUB')"></td>
                                             <td class="py-4 px-4 text-right text-blue-400" x-text="formatCurrency(session.withdrawalsUSDDelta, 'USD')"></td>
                                             <td class="py-4 px-4 text-center">
-                                                <button @click="editSessionByDate(session.date)" class="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all mr-2">
-                                                    <i class="fa-solid fa-edit"></i>
-                                                </button>
                                                 <button @click="deleteSessionByDate(session.date)" class="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all">
                                                     <i class="fa-solid fa-trash mr-2"></i>Удалить
                                                 </button>
@@ -536,37 +564,7 @@
                     </template>
                 </div>
 
-                <!-- Withdrawals -->
-                <div class="glass rounded-3xl p-8">
-                    <div class="flex items-center gap-4 mb-6">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-red-600 flex items-center justify-center">
-                            <i class="fa-solid fa-money-bill-transfer text-white text-xl"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold">Выводы средств</h2>
-                            <p class="text-sm text-slate-400">Сохраняются к активной дате</p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-4">
-                        <template x-for="(site, index) in sites" :key="'wd-'+site.id">
-                            <div class="bg-slate-800/30 rounded-2xl p-4">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="font-bold" x-text="site.name"></span>
-                                    <span class="text-xs px-3 py-1 rounded-full bg-orange-500/20 text-orange-400" x-text="'Всего: ' + formatCurrency(site.totalWithdrawals, site.currency)"></span>
-                                </div>
-                                <div class="flex gap-2">
-                                    <input type="number" x-model="site.newWithdrawal" @keydown.enter="addWithdrawal(site)" class="flex-1 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all" placeholder="Сумма вывода">
-                                    <button @click="addWithdrawal(site)" class="px-6 py-3 rounded-xl gradient-primary hover:opacity-90 font-semibold transition-all">
-                                        <i class="fa-solid fa-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- Enhanced Calendar -->
+                <!-- Calendar -->
                 <div class="glass rounded-2xl p-5">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
@@ -586,7 +584,6 @@
                         </div>
                     </div>
                     
-                    <!-- Calendar Stats -->
                     <div class="grid grid-cols-3 gap-2 mb-3 text-xs">
                         <div class="bg-green-500/10 rounded-lg p-2 text-center border border-green-500/20">
                             <div class="text-green-400 font-bold" x-text="getCalendarStats().profitDays"></div>
@@ -616,29 +613,12 @@
                                      'loss': day.profit < 0,
                                      'break-even': day.profit === 0 && day.hasData,
                                      'today': day.isToday,
-                                     'active': day.isActive,
                                      'opacity-20': !day.day
                                  }"
-                                 @click="selectCalendarDate(day)"
                                  :title="day.hasData ? formatCurrency(day.profit, 'RUB') : ''"
                                  x-text="day.day || ''">
                             </div>
                         </template>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 mt-3 justify-center flex-wrap">
-                        <div class="flex items-center gap-1">
-                            <div class="w-3 h-3 rounded bg-gradient-to-br from-green-500 to-emerald-600"></div>
-                            <span class="text-[10px] text-slate-400">+Прибыль</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <div class="w-3 h-3 rounded bg-gradient-to-br from-red-500 to-pink-600"></div>
-                            <span class="text-[10px] text-slate-400">-Убыток</span>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <div class="w-3 h-3 rounded border-2 border-green-400"></div>
-                            <span class="text-[10px] text-slate-400">Сегодня</span>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -682,42 +662,15 @@
                 <p class="text-xs text-slate-400 mt-2">Суммарно за все время</p>
             </div>
         </div>
-
-        <!-- Bankroll Info -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate-slide-up" style="animation-delay: 1.0s">
-            <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
-                        <i class="fa-solid fa-piggy-bank text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-slate-400 text-sm">Текущий банкролл</p>
-                        <p class="text-3xl font-black" x-text="formatCurrency(totalBankrollRUB, 'RUB')"></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center">
-                        <i class="fa-solid fa-coins text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-slate-400 text-sm">Текущий банкролл (USD)</p>
-                        <p class="text-3xl font-black" x-text="formatCurrency(totalBankrollUSD, 'USD')"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Action Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 via-slate-900/80 to-transparent backdrop-blur-md border-t border-slate-700/50 pt-6 pb-4 px-4 z-50 animate-slide-up">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-wrap justify-center items-center gap-3">
-                <button @click="saveCurrentDay()" class="group px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg transition-all shadow-lg hover:scale-105 flex items-center gap-3">
+                <button @click="saveTodaySession()" class="group px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg transition-all shadow-lg hover:scale-105 flex items-center gap-3">
                     <i class="fa-solid fa-floppy-disk text-xl"></i>
-                    <span>Сохранить день</span>
+                    <span>Сохранить за сегодня</span>
                 </button>
                 
                 <div class="dropdown">
@@ -727,13 +680,9 @@
                         <i class="fa-solid fa-chevron-up text-sm"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <div class="dropdown-item" @click="showDateModal = true">
+                        <div class="dropdown-item" @click="showMissedDayModal = true">
                             <i class="fa-solid fa-calendar-plus text-purple-400"></i>
-                            <span>Добавить с датой</span>
-                        </div>
-                        <div class="dropdown-item" @click="saveNextDay()">
-                            <i class="fa-solid fa-forward text-cyan-400"></i>
-                            <span>Следующий день</span>
+                            <span>Добавить пропущенный день</span>
                         </div>
                         <div class="dropdown-item" @click="backupData()">
                             <i class="fa-solid fa-download text-blue-400"></i>
@@ -751,58 +700,62 @@
                             <i class="fa-solid fa-file-pdf text-red-400"></i>
                             <span>PDF Отчёт</span>
                         </div>
-                        <div class="border-t border-slate-700 my-2"></div>
-                        <div class="dropdown-item" @click="undo()" :class="canUndo ? '' : 'text-slate-500 cursor-not-allowed'">
-                            <i class="fa-solid fa-rotate-left text-orange-400"></i>
-                            <span>Отменить</span>
-                        </div>
-                        <div class="dropdown-item" @click="redo()" :class="canRedo ? '' : 'text-slate-500 cursor-not-allowed'">
-                            <i class="fa-solid fa-rotate-right text-orange-400"></i>
-                            <span>Повторить</span>
-                        </div>
-                        <div class="border-t border-slate-700 my-2"></div>
-                        <div class="dropdown-item" @click="resetForm()">
-                            <i class="fa-solid fa-rotate-right text-red-400"></i>
-                            <span>Сброс</span>
-                        </div>
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-3">
-                    <div x-show="activeDate" class="flex items-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
-                        <i class="fa-solid fa-calendar-day text-cyan-400"></i>
-                        <span class="text-sm font-medium text-cyan-400" x-text="activeDate"></span>
-                        <button @click="setActiveDate(null)" class="ml-2 text-slate-400 hover:text-white">
-                            <i class="fa-solid fa-xmark text-xs"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="flex items-center gap-2 px-4 py-3 rounded-xl" :class="hasUnsavedChanges ? 'bg-yellow-500/20 border border-yellow-500/50' : 'bg-slate-800/50 border border-slate-700/50'">
-                        <i class="fa-solid" :class="hasUnsavedChanges ? 'fa-exclamation-triangle text-yellow-400' : 'fa-cloud text-green-400'"></i>
-                        <span class="text-sm font-medium" :class="hasUnsavedChanges ? 'text-yellow-400' : 'text-green-400'" x-text="hasUnsavedChanges ? 'Несохранено' : 'Сохранено'"></span>
-                    </div>
+                <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                    <i class="fa-solid fa-cloud text-green-400"></i>
+                    <span class="text-sm font-medium text-green-400">Готов к сохранению</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    <div x-show="showDateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showDateModal = false">
-        <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
-            <h3 class="text-2xl font-bold mb-6">Добавить сессию</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-slate-400 mb-2">Дата:</label>
-                    <input type="date" x-model="selectedDate" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+    <!-- Missed Day Modal -->
+    <div x-show="showMissedDayModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showMissedDayModal = false">
+        <div class="glass rounded-3xl p-8 max-w-2xl w-full animate-slide-up max-h-[90vh] overflow-y-auto">
+            <h3 class="text-2xl font-bold mb-6">📅 Добавить пропущенный день</h3>
+            
+            <div class="mb-6">
+                <label class="block text-sm text-slate-400 mb-2">Дата:</label>
+                <input type="date" x-model="missedDayDate" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+            </div>
+
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold mb-4">Балансы на конец дня</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <template x-for="(site, index) in missedDaySites" :key="index">
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-2" x-text="site.name"></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" x-text="site.currency === 'USD' ? '$' : '₽'"></span>
+                                <input type="number" x-model="site.currentBalance" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                            </div>
+                        </div>
+                    </template>
                 </div>
-                <div class="flex gap-3">
-                    <button @click="selectDayByDate()" class="flex-1 px-6 py-3 rounded-xl gradient-primary hover:opacity-90 font-semibold">Выбрать день</button>
-                    <button @click="showDateModal = false" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold">Отмена</button>
+            </div>
+
+            <div class="mb-6">
+                <h4 class="text-lg font-semibold mb-4">Выводы (если были)</h4>
+                <div class="space-y-3">
+                    <template x-for="(site, index) in missedDaySites" :key="'missed-wd-'+index">
+                        <div class="flex gap-2">
+                            <span class="px-3 py-3 rounded-xl bg-slate-700/50 text-sm font-medium min-w-[100px]" x-text="site.name"></span>
+                            <input type="number" x-model="site.newWithdrawal" :placeholder="'Вывод ' + site.currency" class="flex-1 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all">
+                        </div>
+                    </template>
                 </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button @click="saveMissedDay()" class="flex-1 px-6 py-3 rounded-xl gradient-primary hover:opacity-90 font-semibold">Сохранить</button>
+                <button @click="showMissedDayModal = false" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold">Отмена</button>
             </div>
         </div>
     </div>
 
+    <!-- Other Modals (Add Room, Goals) -->
     <div x-show="showAddRoomModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showAddRoomModal = false">
         <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
             <h3 class="text-2xl font-bold mb-6">Добавить рум</h3>
@@ -856,22 +809,19 @@
                 darkMode: true,
                 currentTheme: 'neon',
                 history: [],
-                showDateModal: false,
                 showAddRoomModal: false,
                 showGoalsModal: false,
-                selectedDate: new Date().toISOString().split('T')[0],
+                showMissedDayModal: false,
+                missedDayDate: new Date().toISOString().split('T')[0],
+                missedDaySites: [],
                 newRoomName: '',
                 newRoomCurrency: 'USD',
                 autoSaved: false,
                 alerts: [],
                 draggedIndex: null,
                 dragOverIndex: null,
-                activeDate: null,
                 calendarDate: new Date(),
-                undoStack: [],
-                redoStack: [],
-                hasUnsavedChanges: false,
-                savedDeposits: {}, // ✅ Постоянные депозиты
+                baseDeposits: {},
                 goals: { monthlyProfit: 500000, monthlyLossLimit: 100000 },
                 sites: [
                     { id: 1, name: 'Pokerdom', currency: 'RUB', initialDeposit: 0, currentBalance: 0, totalWithdrawals: 0, newWithdrawal: '' },
@@ -887,28 +837,21 @@
                         this.exchangeRate = data.exchangeRate || 90.50;
                         this.sites = data.sites || this.sites;
                         this.history = data.history || [];
+                        this.baseDeposits = data.baseDeposits || {};
                         this.goals = data.goals || this.goals;
-                        this.activeDate = data.activeDate || null;
-                        this.currentTheme = data.currentTheme || 'neon';
-                        this.savedDeposits = data.savedDeposits || {}; // ✅ Загружаем сохраненные депозиты
+                        if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                         
-                        // Применяем сохраненные депозиты
+                        // Apply base deposits
                         this.sites.forEach(site => {
-                            if (this.savedDeposits[site.id] !== undefined) {
-                                site.initialDeposit = this.savedDeposits[site.id];
+                            if (this.baseDeposits[site.id] !== undefined) {
+                                site.initialDeposit = this.baseDeposits[site.id];
                             }
                         });
-                        
-                        if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                     }
                     this.applyTheme();
                     await this.fetchExchangeRate();
                     setInterval(() => { this.fetchExchangeRate(); }, 5 * 60 * 1000);
                     this.checkAlerts();
-                    
-                    if (this.activeDate) {
-                        this.loadDayData(this.activeDate);
-                    }
                 },
 
                 applyTheme() {
@@ -917,33 +860,27 @@
                     this.saveToStorage();
                 },
 
-                // ✅ Сохранить депозиты
-                saveDeposits() {
+                saveBaseDeposits() {
                     this.sites.forEach(site => {
-                        this.savedDeposits[site.id] = parseFloat(site.initialDeposit) || 0;
+                        this.baseDeposits[site.id] = parseFloat(site.initialDeposit) || 0;
                     });
                     this.saveToStorage();
-                    this.showNotification('💾 Депозиты сохранены!', 'success');
+                    this.showNotification('💾 Базовые депозиты сохранены!', 'success');
                 },
 
-                // ✅ Сбросить к сохраненным
-                resetDeposits() {
+                resetBaseDeposits() {
                     this.sites.forEach(site => {
-                        if (this.savedDeposits[site.id] !== undefined) {
-                            site.initialDeposit = this.savedDeposits[site.id];
+                        if (this.baseDeposits[site.id] !== undefined) {
+                            site.initialDeposit = this.baseDeposits[site.id];
                         } else {
                             site.initialDeposit = 0;
                         }
                     });
-                    this.showNotification('🔄 Депозиты сброшены к сохраненным', 'info');
+                    this.showNotification('🔄 Депозиты сброшены к базовым', 'info');
                 },
 
-                markUnsaved() {
-                    this.hasUnsavedChanges = true;
-                },
-
-                get canUndo() { return this.undoStack.length > 0; },
-                get canRedo() { return this.redoStack.length > 0; },
+                get canUndo() { return false; },
+                get canRedo() { return false; },
 
                 get dashboardMetrics() {
                     return [
@@ -1166,17 +1103,6 @@
                     const sessions = this.getDailySessions();
                     return sessions.map((s, i) => {
                         const prev = i > 0 ? sessions[i-1] : null;
-                        const next = i < sessions.length - 1 ? sessions[i+1] : null;
-                        
-                        if (!prev && next) {
-                            return {
-                                ...s,
-                                profitRUBDelta: 0,
-                                profitUSDDelta: 0,
-                                withdrawalsRUBDelta: 0,
-                                withdrawalsUSDDelta: 0
-                            };
-                        }
                         
                         return {
                             ...s,
@@ -1244,101 +1170,34 @@
                     const first = new Date(y, m, 1), last = new Date(y, m+1, 0);
                     let start = first.getDay(); if (start === 0) start = 7;
                     const days = [], today = new Date();
-                    for (let i = 1; i < start; i++) days.push({ day: 0, date: null, profit: 0, hasData: false, isToday: false, isActive: false });
+                    for (let i = 1; i < start; i++) days.push({ day: 0, date: null, profit: 0, hasData: false, isToday: false });
                     for (let d = 1; d <= last.getDate(); d++) {
                         const date = new Date(y, m, d), key = date.toLocaleDateString('ru-RU');
                         const session = this.history.find(s => new Date(s.date).toLocaleDateString('ru-RU') === key);
                         const profit = session ? parseFloat(session.profitRUB) || 0 : 0;
-                        days.push({ day: d, date, profit, hasData: !!session, isToday: date.toDateString() === today.toDateString(), isActive: this.activeDate === key });
+                        days.push({ day: d, date, profit, hasData: !!session, isToday: date.toDateString() === today.toDateString() });
                     }
                     return days;
                 },
 
-                async selectCalendarDate(day) {
-                    if (!day.date) return;
+                saveTodaySession() {
+                    const today = new Date().toISOString();
+                    const todayKey = new Date().toLocaleDateString('ru-RU');
                     
-                    const dateKey = day.date.toLocaleDateString('ru-RU');
-                    
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день перед переключением?');
-                        if (save) {
-                            await this.saveCurrentDay();
-                        }
-                    }
-                    
-                    this.activeDate = dateKey;
-                    this.loadDayData(dateKey);
-                    this.hasUnsavedChanges = false;
-                },
-
-                // ✅ Загрузка данных дня (НЕ перезаписывает депозиты)
-                loadDayData(dateKey) {
-                    const session = this.history.find(s => 
-                        new Date(s.date).toLocaleDateString('ru-RU') === dateKey
-                    );
-                    
-                    if (session && session.sites) {
-                        session.sites.forEach((savedSite, index) => {
-                            if (this.sites[index]) {
-                                // ❌ НЕ загружаем initialDeposit (он постоянный)
-                                // ✅ Загружаем только балансы и выводы
-                                this.sites[index].currentBalance = savedSite.currentBalance;
-                                this.sites[index].totalWithdrawals = savedSite.totalWithdrawals;
-                            }
-                        });
-                        this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
-                    } else {
-                        // Новый день - очищаем только балансы и выводы
-                        this.sites.forEach(site => {
-                            // ❌ НЕ трогаем initialDeposit
-                            site.currentBalance = 0;
-                            site.totalWithdrawals = 0;
-                            site.newWithdrawal = '';
-                        });
-                        this.showNotification(`📅 ${dateKey} - новый день. Введите данные.`, 'info');
-                    }
-                },
-
-                async selectDayByDate() {
-                    if (!this.selectedDate) {
-                        this.showNotification('Выберите дату!', 'error');
-                        return;
-                    }
-                    
-                    const dateKey = new Date(this.selectedDate).toLocaleDateString('ru-RU');
-                    
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день?');
-                        if (save) {
-                            await this.saveCurrentDay();
-                        }
-                    }
-                    
-                    this.activeDate = dateKey;
-                    this.loadDayData(dateKey);
-                    this.hasUnsavedChanges = false;
-                    this.showDateModal = false;
-                },
-
-                async saveCurrentDay() {
-                    if (!this.activeDate) {
-                        this.showNotification('Выберите день для сохранения!', 'error');
-                        return;
-                    }
-                    
+                    // Check if already saved today
                     const existing = this.history.find(s => 
-                        new Date(s.date).toLocaleDateString('ru-RU') === this.activeDate
+                        new Date(s.date).toLocaleDateString('ru-RU') === todayKey
                     );
                     
                     if (existing) {
-                        if (!confirm(`Запись за ${this.activeDate} существует. Перезаписать?`)) return;
+                        if (!confirm(`Запись за ${todayKey} уже существует. Перезаписать?`)) return;
                         this.history = this.history.filter(s => 
-                            new Date(s.date).toLocaleDateString('ru-RU') !== this.activeDate
+                            new Date(s.date).toLocaleDateString('ru-RU') !== todayKey
                         );
                     }
                     
                     this.history.push({
-                        date: new Date(this.activeDate).toISOString(),
+                        date: today,
                         profitRUB: this.totalProfitRUB.toFixed(2),
                         profitUSD: this.totalProfitUSD.toFixed(2),
                         exchangeRate: this.exchangeRate,
@@ -1350,18 +1209,83 @@
                         sites: JSON.parse(JSON.stringify(this.sites))
                     });
                     
-                    this.hasUnsavedChanges = false;
+                    // Clear balances and withdrawals for next day
+                    this.sites.forEach(site => {
+                        site.currentBalance = 0;
+                        site.totalWithdrawals = 0;
+                        site.newWithdrawal = '';
+                    });
+                    
                     this.saveToStorage();
-                    this.showNotification(`✅ День ${this.activeDate} сохранен!`, 'success');
+                    this.showNotification(`✅ Сессия за ${todayKey} сохранена!`, 'success');
                     this.checkAlerts();
                 },
 
-                setActiveDate(d) {
-                    this.activeDate = d ? new Date(d).toLocaleDateString('ru-RU') : null;
-                    if (this.activeDate) {
-                        this.loadDayData(this.activeDate);
+                saveMissedDay() {
+                    if (!this.missedDayDate) {
+                        this.showNotification('Выберите дату!', 'error');
+                        return;
                     }
+                    
+                    const dateKey = new Date(this.missedDayDate).toLocaleDateString('ru-RU');
+                    
+                    // Check if already exists
+                    const existing = this.history.find(s => 
+                        new Date(s.date).toLocaleDateString('ru-RU') === dateKey
+                    );
+                    
+                    if (existing) {
+                        if (!confirm(`Запись за ${dateKey} уже существует. Перезаписать?`)) return;
+                        this.history = this.history.filter(s => 
+                            new Date(s.date).toLocaleDateString('ru-RU') !== dateKey
+                        );
+                    }
+                    
+                    // Create session with missed day data
+                    const sessionSites = this.missedDaySites.map((site, index) => {
+                        const originalSite = this.sites[index];
+                        return {
+                            ...originalSite,
+                            initialDeposit: this.baseDeposits[site.id] || 0,
+                            currentBalance: parseFloat(site.currentBalance) || 0,
+                            totalWithdrawals: parseFloat(site.newWithdrawal) || 0
+                        };
+                    });
+                    
+                    // Calculate totals
+                    let totalProfitRUB = 0;
+                    let totalProfitUSD = 0;
+                    let totalWithdrawalsRUB = 0;
+                    let totalWithdrawalsUSD = 0;
+                    
+                    sessionSites.forEach(site => {
+                        const profit = (parseFloat(site.currentBalance) || 0) + (parseFloat(site.totalWithdrawals) || 0) - (parseFloat(site.initialDeposit) || 0);
+                        if (site.currency === 'RUB') {
+                            totalProfitRUB += profit;
+                            totalWithdrawalsRUB += parseFloat(site.totalWithdrawals) || 0;
+                        } else if (site.currency === 'USD') {
+                            totalProfitUSD += profit;
+                            totalWithdrawalsUSD += parseFloat(site.totalWithdrawals) || 0;
+                        }
+                    });
+                    
+                    this.history.push({
+                        date: new Date(this.missedDayDate).toISOString(),
+                        profitRUB: totalProfitRUB.toFixed(2),
+                        profitUSD: totalProfitUSD.toFixed(2),
+                        exchangeRate: this.exchangeRate,
+                        withdrawals: sessionSites.map(s => ({ 
+                            site: s.name, 
+                            currency: s.currency, 
+                            amount: parseFloat(s.totalWithdrawals) || 0 
+                        })),
+                        sites: sessionSites
+                    });
+                    
                     this.saveToStorage();
+                    this.showMissedDayModal = false;
+                    this.showNotification(`✅ Пропущенный день ${dateKey} добавлен!`, 'success');
+                    this.checkAlerts();
                 },
 
                 async fetchExchangeRate() {
@@ -1386,61 +1310,43 @@
                         s.currentBalance -= amt;
                         s.totalWithdrawals += amt;
                         s.newWithdrawal = '';
-                        this.markUnsaved();
                         this.showNotification(`Вывод ${amt} ${s.currency} добавлен!`, 'success');
                     }
                 },
 
-                getLastSessionDateKey() {
-                    if (!this.history.length) return null;
-                    const sorted = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
-                    return new Date(sorted[0].date).toLocaleDateString('ru-RU');
-                },
-
-                editSessionByDate(dateStr) {
+                deleteSessionByDate(dateStr) {
                     const key = new Date(dateStr).toLocaleDateString('ru-RU');
+                    if (!confirm(`Удалить сессию за ${key}?`)) return;
                     
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день?');
-                        if (save) {
-                            this.saveCurrentDay();
-                        }
+                    this.history = this.history.filter(s => new Date(s.date).toLocaleDateString('ru-RU') !== key);
+                    this.saveToStorage();
+                    this.showNotification('Сессия удалена!', 'success');
+                },
+
+                addNewRoom() {
+                    if (!this.newRoomName.trim()) { this.showNotification('Введите название!', 'error'); return; }
+                    this.sites.push({
+                        id: Math.max(...this.sites.map(s => s.id), 0) + 1,
+                        name: this.newRoomName.trim(),
+                        currency: this.newRoomCurrency,
+                        initialDeposit: this.baseDeposits[Math.max(...this.sites.map(s => s.id), 0) + 1] || 0,
+                        currentBalance: 0,
+                        totalWithdrawals: 0,
+                        newWithdrawal: ''
+                    });
+                    this.newRoomName = '';
+                    this.showAddRoomModal = false;
+                    this.saveToStorage();
+                    this.showNotification('Рум добавлен!', 'success');
+                },
+
+                removeSite(i) {
+                    if (this.sites.length <= 1) { this.showNotification('Нельзя удалить последний!', 'error'); return; }
+                    if (confirm(`Удалить ${this.sites[i].name}?`)) {
+                        this.sites.splice(i, 1);
+                        this.saveToStorage();
+                        this.showNotification('Рум удалён!', 'success');
                     }
-                    
-                    this.activeDate = key;
-                    this.loadDayData(key);
-                    this.hasUnsavedChanges = false;
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                },
-
-                saveSession() {
-                    this.saveCurrentDay();
-                },
-
-                saveSessionWithDate() {
-                    this.selectDayByDate();
-                },
-
-                saveSessionForDate(dateISO, dateKey) {
-                    this.selectDayByDate();
-                },
-
-                saveNextDay() {
-                    const t = new Date(); 
-                    t.setDate(t.getDate() + 1);
-                    const key = t.toLocaleDateString('ru-RU');
-                    
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день?');
-                        if (save) {
-                            this.saveCurrentDay();
-                        }
-                    }
-                    
-                    this.activeDate = key;
-                    this.loadDayData(key);
-                    this.hasUnsavedChanges = false;
-                    this.showNotification(`✅ Переход на ${key}. Введите данные.`, 'success');
                 },
 
                 backupData() {
@@ -1449,9 +1355,8 @@
                         exchangeRate: this.exchangeRate,
                         sites: this.sites,
                         history: this.history,
-                        savedDeposits: this.savedDeposits, // ✅ Сохраняем депозиты
+                        baseDeposits: this.baseDeposits,
                         goals: this.goals,
-                        activeDate: this.activeDate,
                         calendarDate: this.calendarDate.toISOString(),
                         currentTheme: this.currentTheme
                     };
@@ -1476,16 +1381,11 @@
                                 this.exchangeRate = data.exchangeRate || 90.50;
                                 this.sites = data.sites || this.sites;
                                 this.history = data.history || [];
-                                this.savedDeposits = data.savedDeposits || {}; // ✅ Загружаем депозиты
+                                this.baseDeposits = data.baseDeposits || {};
                                 this.goals = data.goals || this.goals;
-                                this.activeDate = data.activeDate || null;
                                 this.currentTheme = data.currentTheme || 'neon';
                                 if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                                 this.applyTheme();
-                                if (this.activeDate) {
-                                    this.loadDayData(this.activeDate);
-                                }
-                                this.hasUnsavedChanges = false;
                                 this.saveToStorage();
                                 this.showNotification('Данные импортированы!', 'success');
                             }
@@ -1493,113 +1393,6 @@
                     };
                     reader.readAsText(file);
                     e.target.value = '';
-                },
-
-                deleteSessionByDate(dateStr) {
-                    const key = new Date(dateStr).toLocaleDateString('ru-RU');
-                    if (!confirm(`Удалить сессию за ${key}?`)) return;
-                    
-                    if (this.activeDate === key) {
-                        this.activeDate = null;
-                        this.hasUnsavedChanges = false;
-                    }
-                    
-                    const sorted = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
-                    const idx = sorted.findIndex(s => new Date(s.date).toLocaleDateString('ru-RU') === key);
-                    this.history = this.history.filter(s => new Date(s.date).toLocaleDateString('ru-RU') !== key);
-                    
-                    if (idx < sorted.length - 1 && sorted[idx+1]) {
-                        const prev = sorted[idx+1];
-                        if (prev.sites) prev.sites.forEach((s, i) => {
-                            if (this.sites[i]) {
-                                this.sites[i].initialDeposit = s.initialDeposit;
-                                this.sites[i].currentBalance = s.currentBalance;
-                                this.sites[i].totalWithdrawals = s.totalWithdrawals;
-                            }
-                        });
-                    } else {
-                        this.sites.forEach(s => { s.initialDeposit = 0; s.currentBalance = 0; s.totalWithdrawals = 0; });
-                    }
-                    
-                    this.saveToStorage();
-                    this.showNotification('Сессия удалена!', 'success');
-                },
-
-                addNewRoom() {
-                    if (!this.newRoomName.trim()) { this.showNotification('Введите название!', 'error'); return; }
-                    this.sites.push({
-                        id: Math.max(...this.sites.map(s => s.id), 0) + 1,
-                        name: this.newRoomName.trim(),
-                        currency: this.newRoomCurrency,
-                        initialDeposit: 0, currentBalance: 0, totalWithdrawals: 0, newWithdrawal: ''
-                    });
-                    this.newRoomName = '';
-                    this.showAddRoomModal = false;
-                    this.markUnsaved();
-                    this.showNotification('Рум добавлен!', 'success');
-                },
-
-                removeSite(i) {
-                    if (this.sites.length <= 1) { this.showNotification('Нельзя удалить последний!', 'error'); return; }
-                    if (confirm(`Удалить ${this.sites[i].name}?`)) {
-                        this.sites.splice(i, 1);
-                        this.markUnsaved();
-                        this.showNotification('Рум удалён!', 'success');
-                    }
-                },
-
-                resetForm() {
-                    if (confirm('Сбросить все данные?')) {
-                        this.sites.forEach(s => { s.initialDeposit = 0; s.currentBalance = 0; s.totalWithdrawals = 0; });
-                        this.markUnsaved();
-                    }
-                },
-
-                exportData(fmt) {
-                    if (fmt === 'excel') {
-                        const data = [['Дата', 'Прибыль RUB', 'Прибыль USD', 'Выводы RUB', 'Выводы USD']];
-                        this.getDailySessionsWithDelta().forEach(s => {
-                            data.push([this.formatDate(s.date), s.profitRUBDelta, s.profitUSDDelta, s.withdrawalsRUBDelta, s.withdrawalsUSDDelta]);
-                        });
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Статистика');
-                        XLSX.writeFile(wb, `poker-${new Date().toISOString().split('T')[0]}.xlsx`);
-                        this.showNotification('Excel создан!', 'success');
-                    }
-                },
-
-                async exportPDF() {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    doc.setFontSize(20);
-                    doc.text('Poker Bankroll Report', 20, 20);
-                    doc.setFontSize(12);
-                    doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
-                    doc.text(`Total Profit: ${this.formatCurrency(this.totalProfitRUB, 'RUB')}`, 20, 50);
-                    doc.save(`poker-report-${new Date().toISOString().split('T')[0]}.pdf`);
-                    this.showNotification('PDF создан!', 'success');
-                },
-
-                undo() {
-                    if (!this.canUndo) return;
-                    const current = { sites: JSON.parse(JSON.stringify(this.sites)), history: [...this.history] };
-                    this.redoStack.push(current);
-                    const prev = this.undoStack.pop();
-                    this.sites = prev.sites;
-                    this.history = prev.history;
-                    this.saveToStorage();
-                    this.showNotification('Отменено', 'info');
-                },
-
-                redo() {
-                    if (!this.canRedo) return;
-                    const current = { sites: JSON.parse(JSON.stringify(this.sites)), history: [...this.history] };
-                    this.undoStack.push(current);
-                    const next = this.redoStack.pop();
-                    this.sites = next.sites;
-                    this.history = next.history;
-                    this.saveToStorage();
-                    this.showNotification('Повторено', 'info');
                 },
 
                 saveGoals() {
@@ -1642,9 +1435,8 @@
                         exchangeRate: this.exchangeRate,
                         sites: this.sites,
                         history: this.history,
-                        savedDeposits: this.savedDeposits, // ✅ Сохраняем депозиты
+                        baseDeposits: this.baseDeposits,
                         goals: this.goals,
-                        activeDate: this.activeDate,
                         calendarDate: this.calendarDate.toISOString(),
                         currentTheme: this.currentTheme
                     }));

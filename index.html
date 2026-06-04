@@ -496,9 +496,6 @@
                                             <td class="py-4 px-4 text-right text-blue-400" x-text="formatCurrency(session.withdrawalsRUBDelta, 'RUB')"></td>
                                             <td class="py-4 px-4 text-right text-blue-400" x-text="formatCurrency(session.withdrawalsUSDDelta, 'USD')"></td>
                                             <td class="py-4 px-4 text-center">
-                                                <button @click="editSessionByDate(session.date)" class="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all mr-2">
-                                                    <i class="fa-solid fa-edit"></i>
-                                                </button>
                                                 <button @click="deleteSessionByDate(session.date)" class="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all">
                                                     <i class="fa-solid fa-trash mr-2"></i>Удалить
                                                 </button>
@@ -727,14 +724,6 @@
                         <i class="fa-solid fa-chevron-up text-sm"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <div class="dropdown-item" @click="showDateModal = true">
-                            <i class="fa-solid fa-calendar-plus text-purple-400"></i>
-                            <span>Добавить с датой</span>
-                        </div>
-                        <div class="dropdown-item" @click="saveNextDay()">
-                            <i class="fa-solid fa-forward text-cyan-400"></i>
-                            <span>Следующий день</span>
-                        </div>
                         <div class="dropdown-item" @click="backupData()">
                             <i class="fa-solid fa-download text-blue-400"></i>
                             <span>Бэкап</span>
@@ -787,22 +776,6 @@
     </div>
 
     <!-- Modals -->
-    <div x-show="showDateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showDateModal = false">
-        <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
-            <h3 class="text-2xl font-bold mb-6">Добавить сессию</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-slate-400 mb-2">Дата:</label>
-                    <input type="date" x-model="selectedDate" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
-                </div>
-                <div class="flex gap-3">
-                    <button @click="selectDayByDate()" class="flex-1 px-6 py-3 rounded-xl gradient-primary hover:opacity-90 font-semibold">Выбрать день</button>
-                    <button @click="showDateModal = false" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold">Отмена</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div x-show="showAddRoomModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showAddRoomModal = false">
         <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
             <h3 class="text-2xl font-bold mb-6">Добавить рум</h3>
@@ -856,10 +829,8 @@
                 darkMode: true,
                 currentTheme: 'neon',
                 history: [],
-                showDateModal: false,
                 showAddRoomModal: false,
                 showGoalsModal: false,
-                selectedDate: new Date().toISOString().split('T')[0],
                 newRoomName: '',
                 newRoomCurrency: 'USD',
                 autoSaved: false,
@@ -871,7 +842,7 @@
                 undoStack: [],
                 redoStack: [],
                 hasUnsavedChanges: false,
-                savedDeposits: {}, // ✅ Постоянные депозиты
+                savedDeposits: {},
                 goals: { monthlyProfit: 500000, monthlyLossLimit: 100000 },
                 sites: [
                     { id: 1, name: 'Pokerdom', currency: 'RUB', initialDeposit: 0, currentBalance: 0, totalWithdrawals: 0, newWithdrawal: '' },
@@ -888,30 +859,34 @@
                         this.sites = data.sites || this.sites;
                         this.history = data.history || [];
                         this.goals = data.goals || this.goals;
-                        this.activeDate = data.activeDate || null;
+                        this.activeDate = data.activeDate || new Date().toLocaleDateString('ru-RU');
                         this.currentTheme = data.currentTheme || 'neon';
                         if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                         
-                        // ✅ Загружаем сохраненные депозиты
+                        // Загружаем сохраненные депозиты
                         if (data.savedDeposits) {
                             this.savedDeposits = data.savedDeposits;
-                            // Применяем к текущим сайтам
                             this.sites.forEach(site => {
                                 if (this.savedDeposits[site.id] !== undefined) {
                                     site.initialDeposit = this.savedDeposits[site.id];
                                 }
                             });
                         }
+                        
+                        // Загружаем последний сохраненный день
+                        if (this.history.length > 0) {
+                            const lastSession = this.history[this.history.length - 1];
+                            this.loadDayData(lastSession.date);
+                        }
+                    } else {
+                        // Устанавливаем сегодняшнюю дату по умолчанию
+                        this.activeDate = new Date().toLocaleDateString('ru-RU');
                     }
+                    
                     this.applyTheme();
                     await this.fetchExchangeRate();
                     setInterval(() => { this.fetchExchangeRate(); }, 5 * 60 * 1000);
                     this.checkAlerts();
-                    
-                    // Загрузить данные активного дня если есть
-                    if (this.activeDate) {
-                        this.loadDayData(this.activeDate);
-                    }
                 },
 
                 applyTheme() {
@@ -920,7 +895,6 @@
                     this.saveToStorage();
                 },
 
-                // ✅ Сохранить депозиты
                 saveDeposits() {
                     this.sites.forEach(site => {
                         this.savedDeposits[site.id] = parseFloat(site.initialDeposit) || 0;
@@ -929,7 +903,6 @@
                     this.showNotification('💾 Депозиты сохранены!', 'success');
                 },
 
-                // ✅ Сбросить депозиты к последним сохраненным
                 resetDeposits() {
                     this.sites.forEach(site => {
                         if (this.savedDeposits[site.id] !== undefined) {
@@ -1262,7 +1235,6 @@
                     
                     const dateKey = day.date.toLocaleDateString('ru-RU');
                     
-                    // Проверяем несохраненные изменения
                     if (this.hasUnsavedChanges) {
                         const save = confirm('Есть несохраненные изменения. Сохранить текущий день перед переключением?');
                         if (save) {
@@ -1275,30 +1247,26 @@
                     this.hasUnsavedChanges = false;
                 },
 
-                // ✅ Загрузка данных выбранного дня (НЕ трогаем депозиты!)
+                // ✅ Исправлено: Загрузка данных с сохранением текущих значений баланса
                 loadDayData(dateKey) {
                     const session = this.history.find(s => 
                         new Date(s.date).toLocaleDateString('ru-RU') === dateKey
                     );
                     
                     if (session && session.sites) {
-                        // ✅ Загружаем ТОЛЬКО балансы и выводы, НЕ депозиты
+                        // ✅ Загружаем ТОЛЬКО балансы и выводы, НЕ трогаем депозиты
                         session.sites.forEach((savedSite, index) => {
                             if (this.sites[index]) {
-                                // ❌ НЕ загружаем initialDeposit - он остается постоянным!
-                                // this.sites[index].initialDeposit = savedSite.initialDeposit;
-                                
-                                // ✅ Загружаем только балансы и выводы
-                                this.sites[index].currentBalance = savedSite.currentBalance;
+                                // ✅ Сохраняем текущие значения баланса (последние введенные)
+                                // НЕ перезаписываем их данными из истории
+                                // this.sites[index].currentBalance остается как есть
                                 this.sites[index].totalWithdrawals = savedSite.totalWithdrawals;
                             }
                         });
                         this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
                     } else {
-                        // ✅ Новый день - очищаем ТОЛЬКО балансы и выводы, депозиты остаются!
+                        // Новый день - очищаем ТОЛЬКО выводы, баланс остается
                         this.sites.forEach(site => {
-                            // ❌ НЕ трогаем initialDeposit
-                            site.currentBalance = 0;
                             site.totalWithdrawals = 0;
                             site.newWithdrawal = '';
                         });
@@ -1306,32 +1274,9 @@
                     }
                 },
 
-                async selectDayByDate() {
-                    if (!this.selectedDate) {
-                        this.showNotification('Выберите дату!', 'error');
-                        return;
-                    }
-                    
-                    const dateKey = new Date(this.selectedDate).toLocaleDateString('ru-RU');
-                    
-                    // Проверяем несохраненные изменения
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день?');
-                        if (save) {
-                            await this.saveCurrentDay();
-                        }
-                    }
-                    
-                    this.activeDate = dateKey;
-                    this.loadDayData(dateKey);
-                    this.hasUnsavedChanges = false;
-                    this.showDateModal = false;
-                },
-
                 async saveCurrentDay() {
                     if (!this.activeDate) {
-                        this.showNotification('Выберите день для сохранения!', 'error');
-                        return;
+                        this.activeDate = new Date().toLocaleDateString('ru-RU');
                     }
                     
                     const existing = this.history.find(s => 
@@ -1399,56 +1344,8 @@
                     }
                 },
 
-                getLastSessionDateKey() {
-                    if (!this.history.length) return null;
-                    const sorted = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
-                    return new Date(sorted[0].date).toLocaleDateString('ru-RU');
-                },
-
-                editSessionByDate(dateStr) {
-                    const key = new Date(dateStr).toLocaleDateString('ru-RU');
-                    
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день?');
-                        if (save) {
-                            this.saveCurrentDay();
-                        }
-                    }
-                    
-                    this.activeDate = key;
-                    this.loadDayData(key);
-                    this.hasUnsavedChanges = false;
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                },
-
                 saveSession() {
                     this.saveCurrentDay();
-                },
-
-                saveSessionWithDate() {
-                    this.selectDayByDate();
-                },
-
-                saveSessionForDate(dateISO, dateKey) {
-                    this.selectDayByDate();
-                },
-
-                saveNextDay() {
-                    const t = new Date(); 
-                    t.setDate(t.getDate() + 1);
-                    const key = t.toLocaleDateString('ru-RU');
-                    
-                    if (this.hasUnsavedChanges) {
-                        const save = confirm('Есть несохраненные изменения. Сохранить текущий день?');
-                        if (save) {
-                            this.saveCurrentDay();
-                        }
-                    }
-                    
-                    this.activeDate = key;
-                    this.loadDayData(key);
-                    this.hasUnsavedChanges = false;
-                    this.showNotification(`✅ Переход на ${key}. Введите данные.`, 'success');
                 },
 
                 backupData() {
@@ -1457,7 +1354,7 @@
                         exchangeRate: this.exchangeRate,
                         sites: this.sites,
                         history: this.history,
-                        savedDeposits: this.savedDeposits, // ✅ Добавлено
+                        savedDeposits: this.savedDeposits,
                         goals: this.goals,
                         activeDate: this.activeDate,
                         calendarDate: this.calendarDate.toISOString(),
@@ -1484,13 +1381,12 @@
                                 this.exchangeRate = data.exchangeRate || 90.50;
                                 this.sites = data.sites || this.sites;
                                 this.history = data.history || [];
-                                this.savedDeposits = data.savedDeposits || {}; // ✅ Добавлено
+                                this.savedDeposits = data.savedDeposits || {};
                                 this.goals = data.goals || this.goals;
-                                this.activeDate = data.activeDate || null;
+                                this.activeDate = data.activeDate || new Date().toLocaleDateString('ru-RU');
                                 this.currentTheme = data.currentTheme || 'neon';
                                 if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                                 
-                                // Применяем сохраненные депозиты
                                 this.sites.forEach(site => {
                                     if (this.savedDeposits[site.id] !== undefined) {
                                         site.initialDeposit = this.savedDeposits[site.id];
@@ -1658,7 +1554,7 @@
                         exchangeRate: this.exchangeRate,
                         sites: this.sites,
                         history: this.history,
-                        savedDeposits: this.savedDeposits, // ✅ Добавлено
+                        savedDeposits: this.savedDeposits,
                         goals: this.goals,
                         activeDate: this.activeDate,
                         calendarDate: this.calendarDate.toISOString(),

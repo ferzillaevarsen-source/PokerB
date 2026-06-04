@@ -1113,7 +1113,6 @@
                         const prev = i > 0 ? sessions[i-1] : null;
                         const next = i < sessions.length - 1 ? sessions[i+1] : null;
                         
-                        // Если это первый день в списке и есть следующий — это точка отсчёта
                         if (!prev && next) {
                             return {
                                 ...s,
@@ -1200,6 +1199,7 @@
                     return days;
                 },
 
+                // ✅ FIXED: При выборе новой даты НЕ очищаем поля
                 selectCalendarDate(day) {
                     if (!day.date) return;
                     
@@ -1220,13 +1220,8 @@
                         });
                         this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
                     } else {
-                        this.sites.forEach(site => {
-                            site.initialDeposit = 0;
-                            site.currentBalance = 0;
-                            site.totalWithdrawals = 0;
-                            site.newWithdrawal = '';
-                        });
-                        this.showNotification(`📅 ${dateKey} - новый день. Введите данные.`, 'info');
+                        // ✅ НЕ очищаем поля! Пользователь сам решает что делать
+                        this.showNotification(`📅 ${dateKey} - новый день. Введите данные и нажмите "Сохранить".`, 'info');
                     }
                     
                     this.saveToStorage();
@@ -1302,9 +1297,52 @@
                     this.saveSessionForDate(new Date().toISOString(), new Date().toLocaleDateString('ru-RU'));
                 },
 
+                // ✅ FIXED: Сначала сохраняем текущий день, потом переключаемся
                 saveSessionWithDate() {
-                    if (!this.selectedDate) { this.showNotification('Выберите дату!', 'error'); return; }
-                    this.saveSessionForDate(new Date(this.selectedDate).toISOString(), new Date(this.selectedDate).toLocaleDateString('ru-RU'));
+                    if (!this.selectedDate) { 
+                        this.showNotification('Выберите дату!', 'error'); 
+                        return; 
+                    }
+                    
+                    const newDateKey = new Date(this.selectedDate).toLocaleDateString('ru-RU');
+                    const currentDayKey = new Date().toLocaleDateString('ru-RU');
+                    
+                    // ✅ Проверяем, есть ли данные в полях
+                    const hasData = this.sites.some(s => 
+                        parseFloat(s.currentBalance) !== 0 || 
+                        parseFloat(s.initialDeposit) !== 0
+                    );
+                    
+                    // ✅ Если это не текущий день и есть данные - сохраняем сначала текущий день
+                    if (newDateKey !== currentDayKey && hasData) {
+                        const existingCurrent = this.history.find(s => 
+                            new Date(s.date).toLocaleDateString('ru-RU') === currentDayKey
+                        );
+                        
+                        if (!existingCurrent) {
+                            // Сохраняем текущий день перед переключением
+                            this.history.push({
+                                date: new Date().toISOString(),
+                                profitRUB: this.totalProfitRUB.toFixed(2),
+                                profitUSD: this.totalProfitUSD.toFixed(2),
+                                exchangeRate: this.exchangeRate,
+                                withdrawals: this.sites.map(s => ({ 
+                                    site: s.name, 
+                                    currency: s.currency, 
+                                    amount: parseFloat(s.totalWithdrawals) || 0 
+                                })),
+                                sites: JSON.parse(JSON.stringify(this.sites))
+                            });
+                            this.showNotification(`✅ День ${currentDayKey} сохранен!`, 'success');
+                        }
+                    }
+                    
+                    // Теперь сохраняем/переключаемся на выбранную дату
+                    this.saveSessionForDate(
+                        new Date(this.selectedDate).toISOString(), 
+                        newDateKey
+                    );
+                    
                     this.showDateModal = false;
                 },
 

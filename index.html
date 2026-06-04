@@ -855,7 +855,6 @@
                     if (saved) {
                         const data = JSON.parse(saved);
                         this.exchangeRate = data.exchangeRate || 90.50;
-                        // ✅ Сначала загружаем sites с текущими значениями
                         this.sites = data.sites || this.sites;
                         this.history = data.history || [];
                         this.goals = data.goals || this.goals;
@@ -872,8 +871,6 @@
                             });
                         }
                         
-                        // ✅ НЕ вызываем loadDayData() - данные уже загружены в this.sites!
-                        // Просто устанавливаем активную дату
                         if (this.history.length > 0) {
                             const lastSession = this.history[this.history.length - 1];
                             this.activeDate = new Date(lastSession.date).toLocaleDateString('ru-RU');
@@ -932,7 +929,7 @@
                 checkAlerts() {
                     const profit = this.getCurrentMonthProfit();
                     if (profit < -this.goals.monthlyLossLimit) this.addAlert('warning', '⚠️ Лимит потерь!', `Потеряно ${this.formatCurrency(Math.abs(profit), 'RUB')}`);
-                    if (profit >= this.goals.monthlyProfit) this.addAlert('achievement', '🎯 Цель!', `Заработано ${this.formatCurrency(profit, 'RUB')}`);
+                    if (profit >= this.goals.monthlyProfit) this.addAlert('achievement', ' Цель!', `Заработано ${this.formatCurrency(profit, 'RUB')}`);
                     const streak = this.getLosingStreak();
                     if (streak >= 5) this.addAlert('warning', '📉 Серия', `${streak} дней убытков`);
                 },
@@ -1269,24 +1266,28 @@
                     }
                 },
 
+                // ✅ ИСПРАВЛЕНО: Принудительное обновление через splice
                 async saveCurrentDay() {
                     if (!this.activeDate) {
                         this.activeDate = new Date().toLocaleDateString('ru-RU');
                     }
                     
-                    const existing = this.history.find(s => 
-                        new Date(s.date).toLocaleDateString('ru-RU') === this.activeDate
+                    const dateKey = this.activeDate;
+                    const dateISO = new Date().toISOString();
+                    
+                    // ✅ Ищем существующую запись и удаляем её через splice
+                    const existingIndex = this.history.findIndex(s => 
+                        new Date(s.date).toLocaleDateString('ru-RU') === dateKey
                     );
                     
-                    if (existing) {
-                        if (!confirm(`Запись за ${this.activeDate} существует. Перезаписать?`)) return;
-                        this.history = this.history.filter(s => 
-                            new Date(s.date).toLocaleDateString('ru-RU') !== this.activeDate
-                        );
+                    if (existingIndex !== -1) {
+                        // ✅ Удаляем старую запись
+                        this.history.splice(existingIndex, 1);
                     }
                     
-                    this.history.push({
-                        date: new Date(this.activeDate).toISOString(),
+                    // ✅ Создаем новую запись с текущими данными
+                    const newEntry = {
+                        date: dateISO,
                         profitRUB: this.totalProfitRUB.toFixed(2),
                         profitUSD: this.totalProfitUSD.toFixed(2),
                         exchangeRate: this.exchangeRate,
@@ -1296,12 +1297,17 @@
                             amount: parseFloat(s.totalWithdrawals) || 0 
                         })),
                         sites: JSON.parse(JSON.stringify(this.sites))
-                    });
+                    };
+                    
+                    this.history.push(newEntry);
                     
                     this.hasUnsavedChanges = false;
                     this.saveToStorage();
-                    this.showNotification(`✅ День ${this.activeDate} сохранен!`, 'success');
-                    this.checkAlerts();
+                    
+                    // ✅ Принудительно обновляем интерфейс
+                    this.$nextTick(() => {
+                        this.showNotification(`✅ День ${dateKey} сохранен!`, 'success');
+                    });
                 },
 
                 setActiveDate(d) {
@@ -1328,6 +1334,7 @@
                     }
                 },
 
+                // ✅ ИСПРАВЛЕНО: С принудительным обновлением через $nextTick
                 addWithdrawal(s) {
                     const amt = parseFloat(s.newWithdrawal);
                     if (amt && amt > 0) {
@@ -1335,10 +1342,14 @@
                         s.totalWithdrawals += amt;
                         s.newWithdrawal = '';
                         this.markUnsaved();
-                        this.saveToStorage();
-                        // ✅ Автоматически сохраняем день чтобы вывод попал в статистику
+                        
+                        // ✅ Сохраняем день чтобы вывод попал в статистику
                         this.saveCurrentDay();
-                        this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован и сохранен!`, 'success');
+                        
+                        // ✅ Принудительно обновляем отображение через небольшую задержку
+                        this.$nextTick(() => {
+                            this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован и сохранен!`, 'success');
+                        });
                     }
                 },
 

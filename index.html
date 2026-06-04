@@ -1243,7 +1243,6 @@
                     this.hasUnsavedChanges = false;
                 },
 
-                // ✅ ИСПРАВЛЕНО: Загружаем ВСЕ данные включая выводы
                 loadDayData(dateKey) {
                     const session = this.history.find(s => 
                         new Date(s.date).toLocaleDateString('ru-RU') === dateKey
@@ -1253,14 +1252,14 @@
                         session.sites.forEach((savedSite, index) => {
                             if (this.sites[index]) {
                                 this.sites[index].currentBalance = savedSite.currentBalance;
-                                this.sites[index].totalWithdrawals = savedSite.totalWithdrawals; // ✅ Загружаем выводы!
+                                this.sites[index].totalWithdrawals = savedSite.totalWithdrawals;
                             }
                         });
                         this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
                     } else {
                         this.sites.forEach(site => {
                             site.currentBalance = 0;
-                            site.totalWithdrawals = 0; // ✅ Очищаем выводы
+                            site.totalWithdrawals = 0;
                             site.newWithdrawal = '';
                         });
                         this.showNotification(`📅 ${dateKey} - новый день. Введите данные.`, 'info');
@@ -1326,7 +1325,6 @@
                     }
                 },
 
-                // ✅ ИСПРАВЛЕНО: Автоматически сохраняем день после вывода
                 addWithdrawal(s) {
                     const amt = parseFloat(s.newWithdrawal);
                     if (amt && amt > 0) {
@@ -1334,9 +1332,10 @@
                         s.totalWithdrawals += amt;
                         s.newWithdrawal = '';
                         this.markUnsaved();
-                        // ✅ Автоматически сохраняем день после вывода
-                        this.saveCurrentDay();
-                        this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован и сохранен!`, 'success');
+                        this.saveToStorage();
+                        this.$nextTick(() => {
+                            this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован!`, 'success');
+                        });
                     }
                 },
 

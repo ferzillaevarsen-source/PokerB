@@ -399,7 +399,7 @@
                                 <label class="block text-sm text-slate-400 mb-2" x-text="site.name"></label>
                                 <div class="relative">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" x-text="site.currency === 'USD' ? '$' : '₽'"></span>
-                                    <input type="number" x-model="baseDeposits[site.id]" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all">
+                                    <input type="number" x-model="site.initialDeposit" @input="baseDeposits[site.id] = parseFloat(site.initialDeposit) || 0" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all">
                                 </div>
                             </div>
                         </template>
@@ -714,7 +714,7 @@
     <!-- Missed Day Modal -->
     <div x-show="showMissedDayModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showMissedDayModal = false">
         <div class="glass rounded-3xl p-8 max-w-2xl w-full animate-slide-up max-h-[90vh] overflow-y-auto">
-            <h3 class="text-2xl font-bold mb-6">📅 Добавить пропущенный день</h3>
+            <h3 class="text-2xl font-bold mb-6"> Добавить пропущенный день</h3>
             
             <div class="mb-6">
                 <label class="block text-sm text-slate-400 mb-2">Дата:</label>
@@ -860,6 +860,7 @@
                     this.saveToStorage();
                 },
 
+                // ✅ ИСПРАВЛЕНО: Депозиты не обнуляются после сохранения
                 saveBaseDeposits() {
                     this.sites.forEach(site => {
                         this.baseDeposits[site.id] = parseFloat(site.initialDeposit) || 0;
@@ -884,7 +885,7 @@
                         { label: 'Прибыль', value: this.formatCurrency(this.getDashboardProfitRUB(), 'RUB'), subtitle: this.formatCurrency(this.getDashboardProfitUSD(), 'USD'), icon: 'fa-solid fa-sack-dollar', color: 'bg-gradient-to-br from-green-400 to-emerald-600', valueColor: 'text-green-400', badge: 'bg-green-500/20 text-green-400' },
                         { label: 'Винрейт', value: this.getDashboardWinRate() + '%', subtitle: this.getDashboardWinningDays() + ' из ' + this.getDashboardTotalDays(), icon: 'fa-solid fa-percent', color: 'bg-gradient-to-br from-blue-400 to-cyan-600', valueColor: 'text-blue-400', badge: 'bg-blue-500/20 text-blue-400' },
                         { label: 'Лучшая', value: this.formatCurrency(this.getBestSession(), 'RUB'), subtitle: this.formatDate(this.getBestSessionDate()), icon: 'fa-solid fa-trophy', color: 'bg-gradient-to-br from-purple-400 to-pink-600', valueColor: 'text-purple-400', badge: 'bg-purple-500/20 text-purple-400' },
-                        { label: 'Стрик', value: this.getCurrentStreak(), subtitle: this.getCurrentStreak() >= 0 ? 'прибыльных ' : 'убыточных', icon: 'fa-solid fa-fire', color: 'bg-gradient-to-br from-orange-400 to-red-600', valueColor: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400' }
+                        { label: 'Стрик', value: this.getCurrentStreak(), subtitle: this.getCurrentStreak() >= 0 ? 'прибыльных 🔥' : 'убыточных', icon: 'fa-solid fa-fire', color: 'bg-gradient-to-br from-orange-400 to-red-600', valueColor: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400' }
                     ];
                 },
 
@@ -893,7 +894,7 @@
                     if (profit < -this.goals.monthlyLossLimit) this.addAlert('warning', '⚠️ Лимит потерь!', `Потеряно ${this.formatCurrency(Math.abs(profit), 'RUB')}`);
                     if (profit >= this.goals.monthlyProfit) this.addAlert('achievement', '🎯 Цель!', `Заработано ${this.formatCurrency(profit, 'RUB')}`);
                     const streak = this.getLosingStreak();
-                    if (streak >= 5) this.addAlert('warning', ' Серия', `${streak} дней убытков`);
+                    if (streak >= 5) this.addAlert('warning', '📉 Серия', `${streak} дней убытков`);
                 },
 
                 addAlert(type, title, message) {
@@ -1079,7 +1080,6 @@
                     return ((b / this.totalBankrollRUB) * 100).toFixed(1);
                 },
 
-                // ✅ КЛЮЧЕВОЕ: Каждый день хранит полные данные
                 getDailySessions() {
                     const map = new Map();
                     this.history.forEach(s => {
@@ -1097,7 +1097,6 @@
                     return Array.from(map.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
                 },
 
-                // ✅ Прибыль считается динамически: баланс_сегодня - баланс_вчера + выводы
                 getDailySessionsWithDelta() {
                     const sessions = this.getDailySessions();
                     return sessions.map((s, i) => {
@@ -1179,7 +1178,6 @@
                     return days;
                 },
 
-                // ✅ Сохранение за сегодня
                 saveTodaySession() {
                     const today = new Date().toISOString();
                     const todayKey = new Date().toLocaleDateString('ru-RU');
@@ -1195,7 +1193,6 @@
                         );
                     }
                     
-                    // Сохраняем полные данные дня
                     this.history.push({
                         date: today,
                         profitRUB: this.totalProfitRUB.toFixed(2),
@@ -1209,7 +1206,7 @@
                         sites: JSON.parse(JSON.stringify(this.sites))
                     });
                     
-                    // Очищаем для следующего дня
+                    // Очищаем только балансы и выводы (депозиты остаются)
                     this.sites.forEach(site => {
                         site.currentBalance = 0;
                         site.totalWithdrawals = 0;
@@ -1221,7 +1218,6 @@
                     this.checkAlerts();
                 },
 
-                // ✅ Добавление пропущенного дня
                 saveMissedDay() {
                     if (!this.missedDayDate) {
                         this.showNotification('Выберите дату!', 'error');
@@ -1241,7 +1237,6 @@
                         );
                     }
                     
-                    // Создаём запись с полными данными
                     const sessionSites = this.missedDaySites.map((site, index) => {
                         const originalSite = this.sites[index];
                         return {

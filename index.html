@@ -378,7 +378,7 @@
                             </div>
                             <div>
                                 <h2 class="text-2xl font-bold">Базовые депозиты</h2>
-                                <p class="text-sm text-slate-400">Подставляются автоматически</p>
+                                <p class="text-sm text-slate-400">Постоянные значения</p>
                             </div>
                         </div>
                         <div class="flex gap-2">
@@ -571,7 +571,7 @@
                             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-600 flex items-center justify-center">
                                 <i class="fa-solid fa-calendar-days text-white text-sm"></i>
                             </div>
-                            <h3 class="text-lg font-bold">📅 Календарь</h3>
+                            <h3 class="text-lg font-bold"> Календарь</h3>
                         </div>
                         <div class="flex items-center gap-2">
                             <button @click="changeMonth(-1)" class="w-7 h-7 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 flex items-center justify-center">
@@ -755,7 +755,7 @@
         </div>
     </div>
 
-    <!-- Other Modals (Add Room, Goals) -->
+    <!-- Other Modals -->
     <div x-show="showAddRoomModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showAddRoomModal = false">
         <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
             <h3 class="text-2xl font-bold mb-6">Добавить рум</h3>
@@ -782,7 +782,7 @@
 
     <div x-show="showGoalsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showGoalsModal = false">
         <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
-            <h3 class="text-2xl font-bold mb-6">🎯 Цели</h3>
+            <h3 class="text-2xl font-bold mb-6"> Цели</h3>
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm text-slate-400 mb-2">Цель прибыли:</label>
@@ -879,15 +879,12 @@
                     this.showNotification('🔄 Депозиты сброшены к базовым', 'info');
                 },
 
-                get canUndo() { return false; },
-                get canRedo() { return false; },
-
                 get dashboardMetrics() {
                     return [
                         { label: 'Прибыль', value: this.formatCurrency(this.getDashboardProfitRUB(), 'RUB'), subtitle: this.formatCurrency(this.getDashboardProfitUSD(), 'USD'), icon: 'fa-solid fa-sack-dollar', color: 'bg-gradient-to-br from-green-400 to-emerald-600', valueColor: 'text-green-400', badge: 'bg-green-500/20 text-green-400' },
                         { label: 'Винрейт', value: this.getDashboardWinRate() + '%', subtitle: this.getDashboardWinningDays() + ' из ' + this.getDashboardTotalDays(), icon: 'fa-solid fa-percent', color: 'bg-gradient-to-br from-blue-400 to-cyan-600', valueColor: 'text-blue-400', badge: 'bg-blue-500/20 text-blue-400' },
                         { label: 'Лучшая', value: this.formatCurrency(this.getBestSession(), 'RUB'), subtitle: this.formatDate(this.getBestSessionDate()), icon: 'fa-solid fa-trophy', color: 'bg-gradient-to-br from-purple-400 to-pink-600', valueColor: 'text-purple-400', badge: 'bg-purple-500/20 text-purple-400' },
-                        { label: 'Стрик', value: this.getCurrentStreak(), subtitle: this.getCurrentStreak() >= 0 ? 'прибыльных 🔥' : 'убыточных', icon: 'fa-solid fa-fire', color: 'bg-gradient-to-br from-orange-400 to-red-600', valueColor: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400' }
+                        { label: 'Стрик', value: this.getCurrentStreak(), subtitle: this.getCurrentStreak() >= 0 ? 'прибыльных ' : 'убыточных', icon: 'fa-solid fa-fire', color: 'bg-gradient-to-br from-orange-400 to-red-600', valueColor: 'text-orange-400', badge: 'bg-orange-500/20 text-orange-400' }
                     ];
                 },
 
@@ -896,7 +893,7 @@
                     if (profit < -this.goals.monthlyLossLimit) this.addAlert('warning', '⚠️ Лимит потерь!', `Потеряно ${this.formatCurrency(Math.abs(profit), 'RUB')}`);
                     if (profit >= this.goals.monthlyProfit) this.addAlert('achievement', '🎯 Цель!', `Заработано ${this.formatCurrency(profit, 'RUB')}`);
                     const streak = this.getLosingStreak();
-                    if (streak >= 5) this.addAlert('warning', '📉 Серия', `${streak} дней убытков`);
+                    if (streak >= 5) this.addAlert('warning', ' Серия', `${streak} дней убытков`);
                 },
 
                 addAlert(type, title, message) {
@@ -1082,6 +1079,7 @@
                     return ((b / this.totalBankrollRUB) * 100).toFixed(1);
                 },
 
+                // ✅ КЛЮЧЕВОЕ: Каждый день хранит полные данные
                 getDailySessions() {
                     const map = new Map();
                     this.history.forEach(s => {
@@ -1099,6 +1097,7 @@
                     return Array.from(map.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
                 },
 
+                // ✅ Прибыль считается динамически: баланс_сегодня - баланс_вчера + выводы
                 getDailySessionsWithDelta() {
                     const sessions = this.getDailySessions();
                     return sessions.map((s, i) => {
@@ -1180,11 +1179,11 @@
                     return days;
                 },
 
+                // ✅ Сохранение за сегодня
                 saveTodaySession() {
                     const today = new Date().toISOString();
                     const todayKey = new Date().toLocaleDateString('ru-RU');
                     
-                    // Check if already saved today
                     const existing = this.history.find(s => 
                         new Date(s.date).toLocaleDateString('ru-RU') === todayKey
                     );
@@ -1196,6 +1195,7 @@
                         );
                     }
                     
+                    // Сохраняем полные данные дня
                     this.history.push({
                         date: today,
                         profitRUB: this.totalProfitRUB.toFixed(2),
@@ -1209,7 +1209,7 @@
                         sites: JSON.parse(JSON.stringify(this.sites))
                     });
                     
-                    // Clear balances and withdrawals for next day
+                    // Очищаем для следующего дня
                     this.sites.forEach(site => {
                         site.currentBalance = 0;
                         site.totalWithdrawals = 0;
@@ -1221,6 +1221,7 @@
                     this.checkAlerts();
                 },
 
+                // ✅ Добавление пропущенного дня
                 saveMissedDay() {
                     if (!this.missedDayDate) {
                         this.showNotification('Выберите дату!', 'error');
@@ -1229,7 +1230,6 @@
                     
                     const dateKey = new Date(this.missedDayDate).toLocaleDateString('ru-RU');
                     
-                    // Check if already exists
                     const existing = this.history.find(s => 
                         new Date(s.date).toLocaleDateString('ru-RU') === dateKey
                     );
@@ -1241,7 +1241,7 @@
                         );
                     }
                     
-                    // Create session with missed day data
+                    // Создаём запись с полными данными
                     const sessionSites = this.missedDaySites.map((site, index) => {
                         const originalSite = this.sites[index];
                         return {
@@ -1252,21 +1252,13 @@
                         };
                     });
                     
-                    // Calculate totals
                     let totalProfitRUB = 0;
                     let totalProfitUSD = 0;
-                    let totalWithdrawalsRUB = 0;
-                    let totalWithdrawalsUSD = 0;
                     
                     sessionSites.forEach(site => {
                         const profit = (parseFloat(site.currentBalance) || 0) + (parseFloat(site.totalWithdrawals) || 0) - (parseFloat(site.initialDeposit) || 0);
-                        if (site.currency === 'RUB') {
-                            totalProfitRUB += profit;
-                            totalWithdrawalsRUB += parseFloat(site.totalWithdrawals) || 0;
-                        } else if (site.currency === 'USD') {
-                            totalProfitUSD += profit;
-                            totalWithdrawalsUSD += parseFloat(site.totalWithdrawals) || 0;
-                        }
+                        if (site.currency === 'RUB') totalProfitRUB += profit;
+                        else if (site.currency === 'USD') totalProfitUSD += profit;
                     });
                     
                     this.history.push({
@@ -1329,7 +1321,7 @@
                         id: Math.max(...this.sites.map(s => s.id), 0) + 1,
                         name: this.newRoomName.trim(),
                         currency: this.newRoomCurrency,
-                        initialDeposit: this.baseDeposits[Math.max(...this.sites.map(s => s.id), 0) + 1] || 0,
+                        initialDeposit: 0,
                         currentBalance: 0,
                         totalWithdrawals: 0,
                         newWithdrawal: ''

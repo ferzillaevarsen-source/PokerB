@@ -1200,7 +1200,6 @@
                     return days;
                 },
 
-                // ✅ FIXED: Load ONLY data from selected date, or clear fields for new dates
                 selectCalendarDate(day) {
                     if (!day.date) return;
                     
@@ -1212,7 +1211,6 @@
                     );
                     
                     if (session && session.sites) {
-                        // Load data from THIS date only
                         session.sites.forEach((savedSite, index) => {
                             if (this.sites[index]) {
                                 this.sites[index].initialDeposit = savedSite.initialDeposit;
@@ -1222,7 +1220,6 @@
                         });
                         this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
                     } else {
-                        // ✅ NEW DAY - Clear fields (DO NOT copy from previous day!)
                         this.sites.forEach(site => {
                             site.initialDeposit = 0;
                             site.currentBalance = 0;
@@ -1362,7 +1359,16 @@
                     
                     this.activeDate = key;
                     this.saveToStorage();
-                    this.showNotification('Следующий день сохранён!', 'success');
+                    
+                    // ✅ CLEAR FIELDS for new day
+                    this.sites.forEach(site => {
+                        site.initialDeposit = 0;
+                        site.currentBalance = 0;
+                        site.totalWithdrawals = 0;
+                        site.newWithdrawal = '';
+                    });
+                    
+                    this.showNotification(`✅ День ${key} сохранён! Введите данные для нового дня.`, 'success');
                     this.checkAlerts();
                 },
 

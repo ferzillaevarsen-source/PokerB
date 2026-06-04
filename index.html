@@ -855,6 +855,7 @@
                     if (saved) {
                         const data = JSON.parse(saved);
                         this.exchangeRate = data.exchangeRate || 90.50;
+                        // ✅ Сначала загружаем sites с текущими значениями
                         this.sites = data.sites || this.sites;
                         this.history = data.history || [];
                         this.goals = data.goals || this.goals;
@@ -871,9 +872,11 @@
                             });
                         }
                         
+                        // ✅ НЕ вызываем loadDayData() - данные уже загружены в this.sites!
+                        // Просто устанавливаем активную дату
                         if (this.history.length > 0) {
                             const lastSession = this.history[this.history.length - 1];
-                            this.loadDayData(lastSession.date);
+                            this.activeDate = new Date(lastSession.date).toLocaleDateString('ru-RU');
                         }
                     } else {
                         this.activeDate = new Date().toLocaleDateString('ru-RU');
@@ -1333,9 +1336,9 @@
                         s.newWithdrawal = '';
                         this.markUnsaved();
                         this.saveToStorage();
-                        this.$nextTick(() => {
-                            this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован!`, 'success');
-                        });
+                        // ✅ Автоматически сохраняем день чтобы вывод попал в статистику
+                        this.saveCurrentDay();
+                        this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован и сохранен!`, 'success');
                     }
                 },
 

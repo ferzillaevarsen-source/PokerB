@@ -138,7 +138,6 @@
             100% { background-position: 0% 50%; }
         }
         
-        /* Theme classes */
         .theme-neon .gradient-primary { background: linear-gradient(135deg, #00FF88 0%, #00D4FF 100%) !important; }
         .theme-cyberpunk .gradient-primary { background: linear-gradient(135deg, #FF00FF 0%, #00FFFF 100%) !important; }
         .theme-blue .gradient-primary { background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%) !important; }
@@ -967,7 +966,6 @@
                 },
                 dragEnd() { this.draggedIndex = this.dragOverIndex = null; },
 
-                // ✅ ИСПРАВЛЕНО: Прибыль = (Баланс + Выводы) - Депозит
                 calculateSiteProfit(s) {
                     return (parseFloat(s.currentBalance) || 0) + (parseFloat(s.totalWithdrawals) || 0) - (parseFloat(s.initialDeposit) || 0);
                 },
@@ -1245,21 +1243,28 @@
                     this.hasUnsavedChanges = false;
                 },
 
+                // ✅ ИСПРАВЛЕНО: НЕ перезаписываем totalWithdrawals при загрузке дня
                 loadDayData(dateKey) {
                     const session = this.history.find(s => 
                         new Date(s.date).toLocaleDateString('ru-RU') === dateKey
                     );
                     
                     if (session && session.sites) {
+                        // ✅ Загружаем ТОЛЬКО балансы, НЕ трогаем выводы и депозиты
                         session.sites.forEach((savedSite, index) => {
                             if (this.sites[index]) {
-                                this.sites[index].totalWithdrawals = savedSite.totalWithdrawals;
+                                // Загружаем только баланс
+                                this.sites[index].currentBalance = savedSite.currentBalance;
+                                // ❌ НЕ загружаем totalWithdrawals - они остаются текущими!
+                                // ❌ НЕ загружаем initialDeposit - они постоянные
                             }
                         });
                         this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
                     } else {
+                        // Новый день - очищаем ТОЛЬКО балансы
                         this.sites.forEach(site => {
-                            site.totalWithdrawals = 0;
+                            site.currentBalance = 0;
+                            // ❌ НЕ очищаем totalWithdrawals
                             site.newWithdrawal = '';
                         });
                         this.showNotification(`📅 ${dateKey} - новый день. Введите данные.`, 'info');
@@ -1325,14 +1330,20 @@
                     }
                 },
 
-                // ✅ ИСПРАВЛЕНО: Выводы сохраняются и отображаются
+                // ✅ ИСПРАВЛЕНО: Выводы сразу сохраняются в localStorage и отображаются в статистике
                 addWithdrawal(s) {
                     const amt = parseFloat(s.newWithdrawal);
                     if (amt && amt > 0) {
+                        // Отнимаем от баланса
                         s.currentBalance -= amt;
+                        // Добавляем к общим выводам
                         s.totalWithdrawals += amt;
+                        // Очищаем поле ввода
                         s.newWithdrawal = '';
+                        // Помечаем как несохраненное
                         this.markUnsaved();
+                        // ✅ Сохраняем текущее состояние в localStorage для отображения
+                        this.saveToStorage();
                         this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован!`, 'success');
                     }
                 },

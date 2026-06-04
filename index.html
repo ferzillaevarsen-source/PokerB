@@ -863,7 +863,6 @@
                         this.currentTheme = data.currentTheme || 'neon';
                         if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                         
-                        // Загружаем сохраненные депозиты
                         if (data.savedDeposits) {
                             this.savedDeposits = data.savedDeposits;
                             this.sites.forEach(site => {
@@ -873,13 +872,11 @@
                             });
                         }
                         
-                        // Загружаем последний сохраненный день
                         if (this.history.length > 0) {
                             const lastSession = this.history[this.history.length - 1];
                             this.loadDayData(lastSession.date);
                         }
                     } else {
-                        // Устанавливаем сегодняшнюю дату по умолчанию
                         this.activeDate = new Date().toLocaleDateString('ru-RU');
                     }
                     
@@ -970,6 +967,7 @@
                 },
                 dragEnd() { this.draggedIndex = this.dragOverIndex = null; },
 
+                // ✅ ИСПРАВЛЕНО: Прибыль = (Баланс + Выводы) - Депозит
                 calculateSiteProfit(s) {
                     return (parseFloat(s.currentBalance) || 0) + (parseFloat(s.totalWithdrawals) || 0) - (parseFloat(s.initialDeposit) || 0);
                 },
@@ -1247,25 +1245,19 @@
                     this.hasUnsavedChanges = false;
                 },
 
-                // ✅ Исправлено: Загрузка данных с сохранением текущих значений баланса
                 loadDayData(dateKey) {
                     const session = this.history.find(s => 
                         new Date(s.date).toLocaleDateString('ru-RU') === dateKey
                     );
                     
                     if (session && session.sites) {
-                        // ✅ Загружаем ТОЛЬКО балансы и выводы, НЕ трогаем депозиты
                         session.sites.forEach((savedSite, index) => {
                             if (this.sites[index]) {
-                                // ✅ Сохраняем текущие значения баланса (последние введенные)
-                                // НЕ перезаписываем их данными из истории
-                                // this.sites[index].currentBalance остается как есть
                                 this.sites[index].totalWithdrawals = savedSite.totalWithdrawals;
                             }
                         });
                         this.showNotification(`📅 Загружены данные за ${dateKey}`, 'info');
                     } else {
-                        // Новый день - очищаем ТОЛЬКО выводы, баланс остается
                         this.sites.forEach(site => {
                             site.totalWithdrawals = 0;
                             site.newWithdrawal = '';
@@ -1333,6 +1325,7 @@
                     }
                 },
 
+                // ✅ ИСПРАВЛЕНО: Выводы сохраняются и отображаются
                 addWithdrawal(s) {
                     const amt = parseFloat(s.newWithdrawal);
                     if (amt && amt > 0) {
@@ -1340,7 +1333,7 @@
                         s.totalWithdrawals += amt;
                         s.newWithdrawal = '';
                         this.markUnsaved();
-                        this.showNotification(`Вывод ${amt} ${s.currency} добавлен!`, 'success');
+                        this.showNotification(`✅ Вывод ${amt} ${s.currency} зафиксирован!`, 'success');
                     }
                 },
 

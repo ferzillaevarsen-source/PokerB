@@ -446,7 +446,8 @@
                             <i class="fa-solid fa-calculator text-indigo-400 mt-1"></i>
                             <div class="text-sm text-indigo-300">
                                 <p class="font-semibold mb-2">Формула расчета:</p>
-                                <code class="block bg-slate-900/50 px-4 py-2 rounded-lg text-xs mb-2">Прибыль = (Баланс + Выводы) − Депозит</code>
+                                <code class="block bg-slate-900/50 px-4 py-2 rounded-lg text-xs mb-2">Прибыль = Баланс − Депозит</code>
+                                <p class="text-xs opacity-75">Выводы не влияют на прибыль</p>
                             </div>
                         </div>
                     </div>
@@ -464,7 +465,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold">Выводы средств</h2>
-                            <p class="text-sm text-slate-400">Добавьте если были выводы сегодня</p>
+                            <p class="text-sm text-slate-400">Не влияют на прибыль</p>
                         </div>
                     </div>
 
@@ -680,10 +681,6 @@
                         <i class="fa-solid fa-chevron-up text-sm"></i>
                     </button>
                     <div class="dropdown-menu">
-                        <div class="dropdown-item" @click="openMissedDayModal()">
-                            <i class="fa-solid fa-calendar-plus text-purple-400"></i>
-                            <span>Добавить пропущенный день</span>
-                        </div>
                         <div class="dropdown-item" @click="backupData()">
                             <i class="fa-solid fa-download text-blue-400"></i>
                             <span>Бэкап</span>
@@ -707,50 +704,6 @@
                     <i class="fa-solid fa-cloud text-green-400"></i>
                     <span class="text-sm font-medium text-green-400">Готов к сохранению</span>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Missed Day Modal -->
-    <div x-show="showMissedDayModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click.self="showMissedDayModal = false">
-        <div class="glass rounded-3xl p-8 max-w-2xl w-full animate-slide-up max-h-[90vh] overflow-y-auto">
-            <h3 class="text-2xl font-bold mb-6">📅 Добавить пропущенный день</h3>
-            
-            <div class="mb-6">
-                <label class="block text-sm text-slate-400 mb-2">Дата:</label>
-                <input type="date" x-model="missedDayDate" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
-            </div>
-
-            <div class="mb-6">
-                <h4 class="text-lg font-semibold mb-4">Балансы на конец дня</h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <template x-for="(site, index) in missedDaySites" :key="index">
-                        <div>
-                            <label class="block text-sm text-slate-400 mb-2" x-text="site.name"></label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" x-text="site.currency === 'USD' ? '$' : '₽'"></span>
-                                <input type="number" x-model="site.currentBalance" class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <h4 class="text-lg font-semibold mb-4">Выводы (если были)</h4>
-                <div class="space-y-3">
-                    <template x-for="(site, index) in missedDaySites" :key="'missed-wd-'+index">
-                        <div class="flex gap-2">
-                            <span class="px-3 py-3 rounded-xl bg-slate-700/50 text-sm font-medium min-w-[100px]" x-text="site.name"></span>
-                            <input type="number" x-model="site.newWithdrawal" :placeholder="'Вывод ' + site.currency" class="flex-1 px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all">
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <div class="flex gap-3">
-                <button @click="saveMissedDay()" class="flex-1 px-6 py-3 rounded-xl gradient-primary hover:opacity-90 font-semibold">Сохранить</button>
-                <button @click="showMissedDayModal = false" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 font-semibold">Отмена</button>
             </div>
         </div>
     </div>
@@ -811,9 +764,6 @@
                 history: [],
                 showAddRoomModal: false,
                 showGoalsModal: false,
-                showMissedDayModal: false,
-                missedDayDate: new Date().toISOString().split('T')[0],
-                missedDaySites: [],
                 newRoomName: '',
                 newRoomCurrency: 'USD',
                 autoSaved: false,
@@ -841,25 +791,27 @@
                         this.goals = data.goals || this.goals;
                         if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                         
-                        // ✅ Загружаем последние балансы из последней сессии
-                        if (this.history.length > 0) {
-                            const sorted = [...this.history].sort((a, b) => new Date(b.date) - new Date(a.date));
-                            const lastSession = sorted[0];
-                            if (lastSession.lastBalances) {
-                                this.sites.forEach(site => {
-                                    if (lastSession.lastBalances[site.id] !== undefined) {
-                                        site.currentBalance = lastSession.lastBalances[site.id];
-                                    }
-                                });
-                            }
-                        }
-                        
-                        // Apply base deposits
+                        // Load base deposits
                         this.sites.forEach(site => {
                             if (this.baseDeposits[site.id] !== undefined) {
                                 site.initialDeposit = this.baseDeposits[site.id];
                             }
                         });
+                        
+                        // Load today's data if exists
+                        const todayKey = new Date().toLocaleDateString('ru-RU');
+                        const todaySession = this.history.find(s => 
+                            new Date(s.date).toLocaleDateString('ru-RU') === todayKey
+                        );
+                        
+                        if (todaySession && todaySession.sites) {
+                            todaySession.sites.forEach((savedSite, index) => {
+                                if (this.sites[index]) {
+                                    this.sites[index].currentBalance = savedSite.currentBalance;
+                                    this.sites[index].totalWithdrawals = savedSite.totalWithdrawals;
+                                }
+                            });
+                        }
                     }
                     this.applyTheme();
                     await this.fetchExchangeRate();
@@ -890,16 +842,6 @@
                         }
                     });
                     this.showNotification('🔄 Депозиты сброшены к базовым', 'info');
-                },
-
-                // ✅ Открытие модального окна с копированием данных
-                openMissedDayModal() {
-                    this.missedDaySites = this.sites.map(site => ({
-                        ...site,
-                        currentBalance: 0,
-                        newWithdrawal: ''
-                    }));
-                    this.showMissedDayModal = true;
                 },
 
                 get dashboardMetrics() {
@@ -952,14 +894,15 @@
                 dragEnd() { this.draggedIndex = this.dragOverIndex = null; },
 
                 calculateSiteProfit(s) {
-                    return (parseFloat(s.currentBalance) || 0) + (parseFloat(s.totalWithdrawals) || 0) - (parseFloat(s.initialDeposit) || 0);
+                    // ✅ Прибыль = Баланс - Депозит (выводы не влияют)
+                    return (parseFloat(s.currentBalance) || 0) - (parseFloat(s.initialDeposit) || 0);
                 },
 
                 get totalProfitRUB() {
                     let t = 0;
                     this.sites.forEach(s => {
                         const p = this.calculateSiteProfit(s);
-                        t += s.currency === 'RUB' ? p : s.currency === 'EUR' ? p * this.exchangeRate * 0.92 : p * this.exchangeRate;
+                        t += s.currency === 'RUB' ? p : p * this.exchangeRate;
                     });
                     return t;
                 },
@@ -968,7 +911,7 @@
                     let t = 0;
                     this.sites.forEach(s => {
                         const p = this.calculateSiteProfit(s);
-                        t += s.currency === 'USD' ? p : s.currency === 'RUB' ? p / this.exchangeRate : p * 0.92;
+                        t += s.currency === 'USD' ? p : p / this.exchangeRate;
                     });
                     return t;
                 },
@@ -977,7 +920,7 @@
                     let t = 0;
                     this.sites.forEach(s => {
                         const w = parseFloat(s.totalWithdrawals) || 0;
-                        t += s.currency === 'RUB' ? w : s.currency === 'EUR' ? w * this.exchangeRate * 0.92 : w * this.exchangeRate;
+                        t += s.currency === 'RUB' ? w : w * this.exchangeRate;
                     });
                     return t;
                 },
@@ -986,7 +929,7 @@
                     let t = 0;
                     this.sites.forEach(s => {
                         const w = parseFloat(s.totalWithdrawals) || 0;
-                        t += s.currency === 'USD' ? w : s.currency === 'RUB' ? w / this.exchangeRate : w * 0.92;
+                        t += s.currency === 'USD' ? w : w / this.exchangeRate;
                     });
                     return t;
                 },
@@ -995,7 +938,7 @@
                     let t = 0;
                     this.sites.forEach(s => {
                         const b = parseFloat(s.currentBalance) || 0;
-                        t += s.currency === 'RUB' ? b : s.currency === 'EUR' ? b * this.exchangeRate * 0.92 : b * this.exchangeRate;
+                        t += s.currency === 'RUB' ? b : b * this.exchangeRate;
                     });
                     return t;
                 },
@@ -1004,7 +947,7 @@
                     let t = 0;
                     this.sites.forEach(s => {
                         const b = parseFloat(s.currentBalance) || 0;
-                        t += s.currency === 'USD' ? b : s.currency === 'RUB' ? b / this.exchangeRate : b * 0.92;
+                        t += s.currency === 'USD' ? b : b / this.exchangeRate;
                     });
                     return t;
                 },
@@ -1200,34 +1143,21 @@
                     return days;
                 },
 
-                // ✅ Сохранение с запоминанием балансов
                 saveTodaySession() {
                     const today = new Date().toISOString();
                     const todayKey = new Date().toLocaleDateString('ru-RU');
                     
-                    const existing = this.history.find(s => 
-                        new Date(s.date).toLocaleDateString('ru-RU') === todayKey
+                    // Remove existing today session
+                    this.history = this.history.filter(s => 
+                        new Date(s.date).toLocaleDateString('ru-RU') !== todayKey
                     );
                     
-                    if (existing) {
-                        if (!confirm(`Запись за ${todayKey} уже существует. Перезаписать?`)) return;
-                        this.history = this.history.filter(s => 
-                            new Date(s.date).toLocaleDateString('ru-RU') !== todayKey
-                        );
-                    }
-                    
-                    // ✅ Сохраняем текущие балансы
-                    const lastBalances = {};
-                    this.sites.forEach(site => {
-                        lastBalances[site.id] = parseFloat(site.currentBalance) || 0;
-                    });
-                    
+                    // Save current session
                     this.history.push({
                         date: today,
                         profitRUB: this.totalProfitRUB.toFixed(2),
                         profitUSD: this.totalProfitUSD.toFixed(2),
                         exchangeRate: this.exchangeRate,
-                        lastBalances: lastBalances, // ✅ Сохраняем балансы
                         withdrawals: this.sites.map(s => ({ 
                             site: s.name, 
                             currency: s.currency, 
@@ -1236,74 +1166,15 @@
                         sites: JSON.parse(JSON.stringify(this.sites))
                     });
                     
-                    // ✅ НЕ очищаем балансы - они остаются для следующего дня!
+                    // Clear balances and withdrawals for next day
                     this.sites.forEach(site => {
+                        site.currentBalance = 0;
                         site.totalWithdrawals = 0;
                         site.newWithdrawal = '';
                     });
                     
                     this.saveToStorage();
-                    this.showNotification(`✅ Сессия за ${todayKey} сохранена! Балансы сохранены.`, 'success');
-                    this.checkAlerts();
-                },
-
-                saveMissedDay() {
-                    if (!this.missedDayDate) {
-                        this.showNotification('Выберите дату!', 'error');
-                        return;
-                    }
-                    
-                    const dateKey = new Date(this.missedDayDate).toLocaleDateString('ru-RU');
-                    
-                    const existing = this.history.find(s => 
-                        new Date(s.date).toLocaleDateString('ru-RU') === dateKey
-                    );
-                    
-                    if (existing) {
-                        if (!confirm(`Запись за ${dateKey} уже существует. Перезаписать?`)) return;
-                        this.history = this.history.filter(s => 
-                            new Date(s.date).toLocaleDateString('ru-RU') !== dateKey
-                        );
-                    }
-                    
-                    const sessionSites = this.missedDaySites.map((site, index) => {
-                        const originalSite = this.sites[index];
-                        return {
-                            ...originalSite,
-                            initialDeposit: this.baseDeposits[site.id] || 0,
-                            currentBalance: parseFloat(site.currentBalance) || 0,
-                            totalWithdrawals: parseFloat(site.newWithdrawal) || 0
-                        };
-                    });
-                    
-                    let totalProfitRUB = 0;
-                    let totalProfitUSD = 0;
-                    const lastBalances = {};
-                    
-                    sessionSites.forEach(site => {
-                        const profit = (parseFloat(site.currentBalance) || 0) + (parseFloat(site.totalWithdrawals) || 0) - (parseFloat(site.initialDeposit) || 0);
-                        if (site.currency === 'RUB') totalProfitRUB += profit;
-                        else if (site.currency === 'USD') totalProfitUSD += profit;
-                        lastBalances[site.id] = parseFloat(site.currentBalance) || 0;
-                    });
-                    
-                    this.history.push({
-                        date: new Date(this.missedDayDate).toISOString(),
-                        profitRUB: totalProfitRUB.toFixed(2),
-                        profitUSD: totalProfitUSD.toFixed(2),
-                        exchangeRate: this.exchangeRate,
-                        lastBalances: lastBalances,
-                        withdrawals: sessionSites.map(s => ({ 
-                            site: s.name, 
-                            currency: s.currency, 
-                            amount: parseFloat(s.totalWithdrawals) || 0 
-                        })),
-                        sites: sessionSites
-                    });
-                    
-                    this.saveToStorage();
-                    this.showMissedDayModal = false;
-                    this.showNotification(`✅ Пропущенный день ${dateKey} добавлен!`, 'success');
+                    this.showNotification(`✅ Сессия за ${todayKey} сохранена!`, 'success');
                     this.checkAlerts();
                 },
 

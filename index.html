@@ -170,7 +170,12 @@
                                 <h1 class="text-4xl lg:text-5xl font-black gradient-text">Poker Bankroll Manager</h1>
                                 <div class="flex items-center gap-3 mt-1">
                                     <p class="text-slate-400">Профессиональный учёт МТТ результатов</p>
-                                    <span class="text-lg tracking-widest text-slate-600 select-none">♠ ♥ ♦ ♣</span>
+                                    <span class="text-lg tracking-widest select-none">
+                                        <span class="text-slate-400">♠</span>
+                                        <span class="text-red-500"> ♥</span>
+                                        <span class="text-red-500"> ♦</span>
+                                        <span class="text-slate-400"> ♣</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -194,9 +199,9 @@
                                     <p class="text-xs text-slate-400">USD/RUB</p>
                                     <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" title="Курс обновляется автоматически"></span>
                                 </div>
-                                <p class="text-xl font-bold text-cyan-400" x-text="exchangeRate.toFixed(2)"></p>
+                                <p class="text-xl font-bold text-green-400" x-text="exchangeRate.toFixed(2)"></p>
                             </div>
-                            <button @click="fetchExchangeRate()" class="ml-1 text-slate-400 hover:text-cyan-400 transition-colors" :class="{'animate-spin': loadingRate}" title="Обновить курс">
+                            <button @click="fetchExchangeRate()" class="ml-1 text-slate-400 hover:text-green-400 transition-colors" :class="{'animate-spin': loadingRate}" title="Обновить курс">
                                 <i class="fa-solid fa-rotate"></i>
                             </button>
                         </div>
@@ -313,7 +318,9 @@
                                         <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300" x-text="site.currency"></span>
                                     </div>
                                 </div>
-                                <span class="text-2xl select-none opacity-30" x-text="['♠','♥','♦','♣'][sites.indexOf(site) % 4]"></span>
+                                <span class="text-2xl select-none opacity-50"
+                                      :class="['text-slate-400','text-red-500','text-red-500','text-slate-400'][sites.indexOf(site) % 4]"
+                                      x-text="['♠','♥','♦','♣'][sites.indexOf(site) % 4]"></span>
                             </div>
                             <div class="space-y-2.5">
                                 <div class="flex justify-between items-center">
@@ -438,16 +445,6 @@
                                     </div>
                                 </div>
                             </template>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl border border-indigo-500/20">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-calculator text-indigo-400 mt-1 text-sm"></i>
-                            <div class="text-sm text-indigo-300">
-                                <p class="font-semibold mb-1">Формула расчёта</p>
-                                <code class="block bg-slate-900/50 px-3 py-2 rounded-lg text-xs mb-1">Прибыль за день = Баланс сегодня − Баланс вчера</code>
-                                <p class="text-xs opacity-75">Выводы учитываются отдельно и не влияют на прибыль</p>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -737,7 +734,7 @@
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-up" style="animation-delay:0.9s">
             <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden">
-                <div class="absolute top-3 right-4 text-4xl text-slate-700/40 select-none font-bold">♠</div>
+                <div class="absolute top-3 right-4 text-4xl text-slate-500/40 select-none font-bold">♠</div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center">
                         <i class="fa-solid fa-chart-line text-blue-400"></i>
@@ -748,7 +745,7 @@
                 <p class="text-sm mt-1" :class="totalHistoryProfitUSD >= 0 ? 'text-slate-400' : 'text-red-400/70'" x-text="formatCurrency(totalHistoryProfitUSD, 'USD')"></p>
             </div>
             <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden">
-                <div class="absolute top-3 right-4 text-4xl text-red-900/30 select-none font-bold">♥</div>
+                <div class="absolute top-3 right-4 text-4xl text-red-500/40 select-none font-bold">♥</div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-9 h-9 rounded-xl bg-green-500/20 flex items-center justify-center">
                         <i class="fa-solid fa-trophy text-green-400"></i>
@@ -759,7 +756,7 @@
                 <p class="text-sm mt-1 text-slate-500" x-text="getBestSessionDate() ? formatDate(getBestSessionDate()) : '—'"></p>
             </div>
             <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden">
-                <div class="absolute top-3 right-4 text-4xl text-slate-700/40 select-none font-bold">♦</div>
+                <div class="absolute top-3 right-4 text-4xl text-red-500/40 select-none font-bold">♦</div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-9 h-9 rounded-xl bg-purple-500/20 flex items-center justify-center">
                         <i class="fa-solid fa-arrow-up-from-bracket text-purple-400"></i>
@@ -770,7 +767,7 @@
                 <p class="text-sm mt-1 text-slate-400" x-text="formatCurrency(totalHistoryWithdrawalsUSD, 'USD')"></p>
             </div>
             <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden">
-                <div class="absolute top-3 right-4 text-4xl text-slate-700/40 select-none font-bold">♣</div>
+                <div class="absolute top-3 right-4 text-4xl text-slate-500/40 select-none font-bold">♣</div>
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-9 h-9 rounded-xl bg-orange-500/20 flex items-center justify-center">
                         <i class="fa-solid fa-calendar-check text-orange-400"></i>
@@ -909,7 +906,7 @@
                         <div class="flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3">
                             <span class="font-medium" x-text="sd.name"></span>
                             <span class="font-bold" :class="sd.profit >= 0 ? 'text-green-400' : 'text-red-400'"
-                                  x-text="(sd.profit >= 0 ? '+' : '') + formatCurrency(sd.profit, sd.currency)"></span>
+                                  x-text="formatCurrency(sd.profit, sd.currency)"></span>
                         </div>
                     </template>
                     <div class="border-t border-slate-700 pt-3 flex justify-between items-center">

@@ -126,7 +126,9 @@
 <body class="animated-bg text-white min-h-screen pb-32"
       x-data="pokerApp()"
       x-init="initApp()"
-      :class="'theme-' + currentTheme">
+      :class="'theme-' + currentTheme"
+      @keydown.ctrl.s.window.prevent="showSaveConfirmModal = true"
+      @scroll.window="showScrollTop = window.scrollY > 400">
 
     <!-- Alerts -->
     <div class="fixed top-4 right-4 z-50 space-y-2">
@@ -305,6 +307,9 @@
                              @drop="drop(index)"
                              @dragend="dragEnd()"
                              :class="{'dragging': draggedIndex === index, 'drag-over': dragOverIndex === index}">
+                            <button @click.stop="openEditRoom(site)" class="absolute top-3 right-12 w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-xs" title="Редактировать рум">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
                             <button @click="removeSite(index)" class="absolute top-3 right-3 w-7 h-7 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs">
                                 <i class="fa-solid fa-times"></i>
                             </button>
@@ -732,7 +737,7 @@
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-slide-up" style="animation-delay:0.9s">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8 animate-slide-up" style="animation-delay:0.9s">
             <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden">
                 <div class="absolute top-3 right-4 text-4xl text-slate-500/40 select-none font-bold">♠</div>
                 <div class="flex items-center gap-3 mb-3">
@@ -777,6 +782,24 @@
                 <p class="text-3xl font-black text-orange-400" x-text="history.length"></p>
                 <p class="text-sm mt-1 text-slate-400" x-text="'Win rate: ' + (history.length > 0 ? ((getDailySessionsWithDelta().filter(s => s.profitRUBDelta > 0).length / getDailySessionsWithDelta().length * 100).toFixed(0)) : 0) + '%'"></p>
             </div>
+            <div class="glass rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden">
+                <div class="absolute top-3 right-4 text-3xl select-none font-bold"
+                     :class="getCurrentStreak().type === 'win' ? 'text-green-400/40' : 'text-red-400/40'"
+                     x-text="getCurrentStreak().type === 'win' ? '🔥' : (getCurrentStreak().count > 1 ? '❄️' : '—')"></div>
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+                         :class="getCurrentStreak().type === 'win' ? 'bg-green-500/20' : 'bg-red-500/20'">
+                        <i class="fa-solid fa-fire"
+                           :class="getCurrentStreak().type === 'win' ? 'text-green-400' : 'text-red-400'"></i>
+                    </div>
+                    <p class="text-slate-400 text-sm">Серия</p>
+                </div>
+                <p class="text-3xl font-black"
+                   :class="getCurrentStreak().type === 'win' ? 'text-green-400' : 'text-red-400'"
+                   x-text="getCurrentStreak().count > 0 ? getCurrentStreak().count + ' ' + (getCurrentStreak().type === 'win' ? 'побед' : 'пораж.') : '—'"></p>
+                <p class="text-sm mt-1 text-slate-400"
+                   x-text="getCurrentStreak().count > 1 ? (getCurrentStreak().type === 'win' ? 'Победная серия' : 'Проигрышная серия') : 'Нет серии'"></p>
+            </div>
         </div>
     </div>
 
@@ -791,6 +814,14 @@
         </button>
     </div>
 
+    <!-- Scroll to top -->
+    <button x-show="showScrollTop" x-cloak
+            @click="window.scrollTo({top:0,behavior:'smooth'})"
+            class="fixed bottom-28 right-6 z-40 w-11 h-11 rounded-full gradient-primary shadow-xl flex items-center justify-center hover:scale-110 transition-all"
+            title="Наверх">
+        <i class="fa-solid fa-chevron-up text-white"></i>
+    </button>
+
     <!-- Action Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 via-slate-900/80 to-transparent backdrop-blur-md border-t border-slate-700/50 pt-6 pb-4 px-4 z-50">
         <div class="max-w-7xl mx-auto">
@@ -798,6 +829,11 @@
                 <button @click="showSaveConfirmModal = true" class="px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
                     <i class="fa-solid fa-floppy-disk text-xl"></i>
                     <span x-text="sessionDate === new Date().toISOString().split('T')[0] ? 'Сохранить за сегодня' : 'Сохранить за ' + new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'short'})"></span>
+                </button>
+                <button @click="copyDailyResult()" title="Скопировать результат дня для Telegram"
+                        class="px-6 py-4 rounded-2xl bg-slate-700 hover:bg-slate-600 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-share-nodes text-cyan-400 text-xl"></i>
+                    <span class="text-sm">Поделиться</span>
                 </button>
                 <div class="dropdown">
                     <button class="px-8 py-4 rounded-2xl bg-slate-700 hover:bg-slate-600 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
@@ -840,6 +876,45 @@
                     <button @click="showAddRoomModal = false; newRoomName = ''" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors">Отмена</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Room -->
+    <div x-show="showEditRoomModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="showEditRoomModal = false; editingRoom = null">
+        <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
+            <h3 class="text-2xl font-bold mb-6"><i class="fa-solid fa-pen mr-2 text-blue-400"></i>Редактировать рум</h3>
+            <template x-if="editingRoom">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Название</label>
+                        <input type="text" x-model="editingRoom.name" @keydown.enter="saveEditedRoom()"
+                               class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Валюта</label>
+                        <select x-model="editingRoom.currency" class="w-full px-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700">
+                            <option value="RUB">RUB — Рубль</option>
+                            <option value="USD">USD — Доллар</option>
+                            <option value="EUR">EUR — Евро</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-2">Базовый депозит</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                                  x-text="editingRoom.currency === 'USD' ? '$' : editingRoom.currency === 'EUR' ? '€' : '₽'"></span>
+                            <input type="number" x-model="editingRoom.initialDeposit"
+                                   class="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all">
+                        </div>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button @click="saveEditedRoom()" class="flex-1 px-6 py-3 rounded-xl gradient-primary font-semibold hover:opacity-90 transition-opacity">
+                            <i class="fa-solid fa-check mr-2"></i>Сохранить
+                        </button>
+                        <button @click="showEditRoomModal = false; editingRoom = null" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors">Отмена</button>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -1020,7 +1095,10 @@
                 showGoalsModal: false,
                 showEditModal: false,
                 showSaveConfirmModal: false,
+                showEditRoomModal: false,
                 editingSession: null,
+                editingRoom: null,
+                showScrollTop: false,
                 expandedSessionDate: null,
                 statsSortBy: 'date',
                 statsSortDir: 'desc',
@@ -1229,11 +1307,11 @@
                         {
                             label: 'Всего сессий',
                             value: this.history.length,
-                            subtitle: `Win rate: ${winRate}%`,
+                            subtitle: `Win rate: ${winRate}% · Avg: ${this.formatCurrency(this.getAvgDailyProfit(), 'RUB')}`,
                             icon: 'fa-solid fa-calendar-check',
                             color: 'bg-gradient-to-br from-orange-400 to-red-600',
                             valueColor: 'text-orange-400',
-                            badge: ''
+                            badge: (() => { const s = this.getCurrentStreak(); return s.count > 1 ? (s.type === 'win' ? `🔥 ${s.count}` : `❄️ ${s.count}`) : ''; })()
                         }
                     ];
                 },
@@ -1276,6 +1354,58 @@
                     const sessions = this.getDailySessionsWithDelta();
                     if (!sessions.length) return null;
                     return sessions.reduce((m, s) => (s.profitRUBDelta || 0) > (m.profitRUBDelta || 0) ? s : m).date;
+                },
+
+                getCurrentStreak() {
+                    const sessions = [...this.getDailySessionsWithDelta()].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    if (!sessions.length) return { type: 'none', count: 0 };
+                    const firstIsWin = sessions[0].profitRUBDelta >= 0;
+                    let count = 0;
+                    for (const s of sessions) {
+                        if ((s.profitRUBDelta >= 0) === firstIsWin) count++;
+                        else break;
+                    }
+                    return { type: firstIsWin ? 'win' : 'loss', count };
+                },
+
+                getAvgDailyProfit() {
+                    const sessions = this.getDailySessionsWithDelta();
+                    if (!sessions.length) return 0;
+                    return sessions.reduce((acc, s) => acc + s.profitRUBDelta, 0) / sessions.length;
+                },
+
+                copyDailyResult() {
+                    const date = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                    let text = `🃏 Покер ${date}\n`;
+                    this.sites.forEach(site => {
+                        const profit = this.calculateSiteProfit(site);
+                        if (profit !== 0) text += `${site.name}: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${site.currency}\n`;
+                    });
+                    const rub = this.totalProfitRUB, usd = this.totalProfitUSD;
+                    text += `\n💰 Итого: ${rub >= 0 ? '+' : ''}${Math.round(rub).toLocaleString('ru-RU')} ₽ / ${usd >= 0 ? '+' : ''}${usd.toFixed(2)} $`;
+                    navigator.clipboard.writeText(text)
+                        .then(() => this.showNotification('📋 Скопировано в буфер обмена', 'success'))
+                        .catch(() => this.showNotification('Ошибка копирования', 'warning'));
+                },
+
+                openEditRoom(site) {
+                    this.editingRoom = { id: site.id, name: site.name, currency: site.currency, initialDeposit: site.initialDeposit };
+                    this.showEditRoomModal = true;
+                },
+
+                saveEditedRoom() {
+                    if (!this.editingRoom) return;
+                    const idx = this.sites.findIndex(s => s.id === this.editingRoom.id);
+                    if (idx >= 0) {
+                        this.sites[idx].name          = this.editingRoom.name.trim() || this.sites[idx].name;
+                        this.sites[idx].currency       = this.editingRoom.currency;
+                        this.sites[idx].initialDeposit = parseFloat(this.editingRoom.initialDeposit) || 0;
+                        this.baseDeposits[this.editingRoom.id] = this.sites[idx].initialDeposit;
+                        this.saveToStorage();
+                        this.showNotification('Рум обновлён', 'success');
+                    }
+                    this.showEditRoomModal = false;
+                    this.editingRoom = null;
                 },
 
                 getSortedSessions() {

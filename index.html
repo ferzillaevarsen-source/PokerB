@@ -524,6 +524,7 @@
                                             <th class="text-right py-3 px-3 font-semibold text-slate-400">Прибыль RUB</th>
                                             <th class="text-right py-3 px-3 font-semibold text-slate-400">Прибыль USD</th>
                                             <th class="text-right py-3 px-3 font-semibold text-slate-400">Выводы RUB</th>
+                                            <th class="text-right py-3 px-3 font-semibold text-slate-400">Выводы USD</th>
                                             <th class="text-center py-3 px-3 font-semibold text-slate-400"></th>
                                         </tr>
                                     </thead>
@@ -539,6 +540,8 @@
                                                     x-text="formatCurrency(session.profitUSDDelta, 'USD')"></td>
                                                 <td class="py-3 px-3 text-right text-blue-400"
                                                     x-text="session.withdrawalsRUBDelta > 0 ? formatCurrency(session.withdrawalsRUBDelta, 'RUB') : '—'"></td>
+                                                <td class="py-3 px-3 text-right text-purple-400"
+                                                    x-text="session.withdrawalsUSDDelta > 0 ? formatCurrency(session.withdrawalsUSDDelta, 'USD') : '—'"></td>
                                                 <td class="py-3 px-3 text-center">
                                                     <div class="flex gap-1.5 justify-center">
                                                         <button @click="editSession(session)"
@@ -568,6 +571,8 @@
                                                 x-text="formatCurrency(totalHistoryProfitUSD, 'USD')"></td>
                                             <td class="py-3 px-3 text-right font-bold text-blue-400"
                                                 x-text="formatCurrency(totalHistoryWithdrawalsRUB, 'RUB')"></td>
+                                            <td class="py-3 px-3 text-right font-bold text-purple-400"
+                                                x-text="formatCurrency(totalHistoryWithdrawalsUSD, 'USD')"></td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -918,7 +923,18 @@
                         .sort((a, b) => new Date(b.date) - new Date(a.date));
                     if (sorted.length > 0 && sorted[0].sites) {
                         const prevSite = sorted[0].sites.find(s => s.id === site.id);
-                        if (prevSite) return parseFloat(prevSite.currentBalance) || 0;
+                        if (prevSite) {
+                            const prevBal = parseFloat(prevSite.currentBalance) || 0;
+                            // Если предыдущий баланс = 0, проверяем: был ли хоть раз ненулевой баланс раньше.
+                            // Если нет — значит сайт ещё не активировался, используем initialDeposit как базу.
+                            if (prevBal === 0) {
+                                const hadNonZero = sorted.slice(1).some(s =>
+                                    s.sites && s.sites.some(ps => ps.id === site.id && parseFloat(ps.currentBalance) > 0)
+                                );
+                                if (!hadNonZero) return parseFloat(site.initialDeposit) || 0;
+                            }
+                            return prevBal;
+                        }
                     }
                     return parseFloat(site.initialDeposit) || 0;
                 },
@@ -1093,9 +1109,22 @@
 
                                 // Найти предыдущий snapshot этого сайта по id
                                 const prevSite = prev && prev.sites ? prev.sites.find(ps => ps.id === site.id) : null;
-                                const prevBal  = prevSite ? (parseFloat(prevSite.currentBalance)   || 0)
-                                                           : (parseFloat(site.initialDeposit) || 0);
                                 const prevWd   = prevSite ? (parseFloat(prevSite.totalWithdrawals) || 0) : 0;
+                                let prevBal;
+                                if (!prevSite) {
+                                    prevBal = parseFloat(site.initialDeposit) || 0;
+                                } else {
+                                    const b = parseFloat(prevSite.currentBalance) || 0;
+                                    if (b === 0) {
+                                        // Если предыдущий баланс = 0, проверяем был ли ненулевой баланс ещё раньше
+                                        const hadNonZero = sessions.slice(0, i - 1).some(s =>
+                                            s.sites && s.sites.some(ps => ps.id === site.id && parseFloat(ps.currentBalance) > 0)
+                                        );
+                                        prevBal = hadNonZero ? 0 : (parseFloat(site.initialDeposit) || 0);
+                                    } else {
+                                        prevBal = b;
+                                    }
+                                }
 
                                 const wdDelta = totalWd - prevWd;
                                 const delta   = cur - prevBal;

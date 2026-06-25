@@ -388,9 +388,22 @@
                                 <i class="fa-solid fa-calendar-day text-white text-xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-2xl font-bold">Сегодняшняя сессия</h2>
-                                <p class="text-sm text-slate-400" x-text="new Date().toLocaleDateString('ru-RU', {weekday:'long', year:'numeric', month:'long', day:'numeric'})"></p>
+                                <h2 class="text-2xl font-bold">Сессия</h2>
+                                <p class="text-sm text-slate-400"
+                                   x-text="new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {weekday:'long', year:'numeric', month:'long', day:'numeric'})"></p>
                             </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-slate-400">Дата:</label>
+                            <input type="date" x-model="sessionDate"
+                                   :max="new Date().toISOString().split('T')[0]"
+                                   class="px-3 py-2 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm text-white">
+                            <button x-show="sessionDate !== new Date().toISOString().split('T')[0]"
+                                    @click="sessionDate = new Date().toISOString().split('T')[0]"
+                                    class="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs text-slate-300 transition-all"
+                                    title="Вернуть на сегодня">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="mb-6">
@@ -527,10 +540,18 @@
                                                 <td class="py-3 px-3 text-right text-blue-400"
                                                     x-text="session.withdrawalsRUBDelta > 0 ? formatCurrency(session.withdrawalsRUBDelta, 'RUB') : '—'"></td>
                                                 <td class="py-3 px-3 text-center">
-                                                    <button @click="deleteSessionByDate(session.date)"
-                                                            class="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
+                                                    <div class="flex gap-1.5 justify-center">
+                                                        <button @click="editSession(session)"
+                                                                class="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-xs"
+                                                                title="Редактировать">
+                                                            <i class="fa-solid fa-pen"></i>
+                                                        </button>
+                                                        <button @click="deleteSessionByDate(session.date)"
+                                                                class="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs"
+                                                                title="Удалить">
+                                                            <i class="fa-solid fa-trash"></i>
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </template>
@@ -667,7 +688,8 @@
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-wrap justify-center items-center gap-3">
                 <button @click="saveTodaySession()" class="px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
-                    <i class="fa-solid fa-floppy-disk text-xl"></i><span>Сохранить за сегодня</span>
+                    <i class="fa-solid fa-floppy-disk text-xl"></i>
+                    <span x-text="sessionDate === new Date().toISOString().split('T')[0] ? 'Сохранить за сегодня' : 'Сохранить за ' + new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'short'})"></span>
                 </button>
                 <div class="dropdown">
                     <button class="px-8 py-4 rounded-2xl bg-slate-700 hover:bg-slate-600 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
@@ -713,6 +735,63 @@
         </div>
     </div>
 
+    <!-- Modal: Edit Session -->
+    <div x-show="showEditModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="closeEditModal()">
+        <div class="glass rounded-3xl p-8 max-w-2xl w-full animate-slide-up max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold">Редактировать сессию</h3>
+                    <p class="text-sm text-slate-400 mt-1" x-text="editingSession ? new Date(editingSession.date).toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) : ''"></p>
+                </div>
+                <button @click="closeEditModal()" class="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <template x-if="editingSession">
+                <div class="space-y-4">
+                    <template x-for="(site, i) in editingSession.sites" :key="site.id">
+                        <div class="bg-slate-800/30 rounded-2xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-bold" x-text="site.name"></span>
+                                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-400" x-text="site.currency"></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-slate-400 mb-1 block">Баланс</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                                              x-text="site.currency === 'USD' ? '$' : site.currency === 'EUR' ? '€' : '₽'"></span>
+                                        <input type="number" x-model="editingSession.sites[i].currentBalance"
+                                               class="w-full pl-8 pr-3 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-400 mb-1 block">Выводы накопит.</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"
+                                              x-text="site.currency === 'USD' ? '$' : site.currency === 'EUR' ? '€' : '₽'"></span>
+                                        <input type="number" x-model="editingSession.sites[i].totalWithdrawals"
+                                               class="w-full pl-8 pr-3 py-2.5 rounded-xl bg-slate-800/50 border border-orange-700/50 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <div class="flex gap-3 pt-2">
+                        <button @click="saveEditedSession()"
+                                class="flex-1 py-3 rounded-2xl gradient-primary hover:opacity-90 font-bold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Сохранить изменения
+                        </button>
+                        <button @click="closeEditModal()"
+                                class="px-6 py-3 rounded-2xl bg-slate-700 hover:bg-slate-600 font-semibold transition-all">
+                            Отмена
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
     <!-- Modal: Goals -->
     <div x-show="showGoalsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="showGoalsModal = false">
         <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
@@ -751,6 +830,9 @@
                 history: [],
                 showAddRoomModal: false,
                 showGoalsModal: false,
+                showEditModal: false,
+                editingSession: null,
+                sessionDate: new Date().toISOString().split('T')[0],
                 newRoomName: '',
                 newRoomCurrency: 'USD',
                 autoSaved: false,
@@ -1094,11 +1176,11 @@
                 },
 
                 saveTodaySession() {
-                    const today    = new Date();
-                    const todayKey = today.toLocaleDateString('ru-RU');
-                    const existIdx = this.history.findIndex(s => new Date(s.date).toLocaleDateString('ru-RU') === todayKey);
+                    const dateObj  = new Date(this.sessionDate + 'T12:00:00');
+                    const dateKey  = dateObj.toLocaleDateString('ru-RU');
+                    const existIdx = this.history.findIndex(s => new Date(s.date).toLocaleDateString('ru-RU') === dateKey);
                     const session  = {
-                        date:         today.toISOString(),
+                        date:         dateObj.toISOString(),
                         profitRUB:    this.totalProfitRUB.toFixed(2),
                         profitUSD:    this.totalProfitUSD.toFixed(2),
                         exchangeRate: this.exchangeRate,
@@ -1106,12 +1188,13 @@
                     };
                     if (existIdx >= 0) {
                         this.history[existIdx] = session;
-                        this.showNotification(`✅ ${todayKey} обновлено`, 'success');
+                        this.showNotification(`✅ ${dateKey} обновлено`, 'success');
                     } else {
                         this.history.push(session);
-                        this.showNotification(`✅ ${todayKey} сохранено`, 'success');
+                        this.showNotification(`✅ ${dateKey} сохранено`, 'success');
                     }
                     this.history.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    this.sessionDate = new Date().toISOString().split('T')[0];
                     this.saveToStorage();
                     this.checkAlerts();
                 },
@@ -1139,6 +1222,28 @@
                     if (!confirm(`Сбросить выводы ${site.name} до значения предыдущего дня (${this.formatCurrency(this.getPreviousWithdrawals(site), site.currency)})?`)) return;
                     site.totalWithdrawals = this.getPreviousWithdrawals(site);
                     this.showNotification(`Выводы ${site.name} сброшены`, 'info');
+                },
+
+                editSession(session) {
+                    this.editingSession = JSON.parse(JSON.stringify(session));
+                    this.showEditModal = true;
+                },
+
+                saveEditedSession() {
+                    const key = new Date(this.editingSession.date).toLocaleDateString('ru-RU');
+                    const idx = this.history.findIndex(s => new Date(s.date).toLocaleDateString('ru-RU') === key);
+                    if (idx >= 0) {
+                        this.history[idx] = JSON.parse(JSON.stringify(this.editingSession));
+                        this.history.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        this.saveToStorage();
+                        this.showNotification(`✅ Сессия за ${key} обновлена`, 'success');
+                    }
+                    this.closeEditModal();
+                },
+
+                closeEditModal() {
+                    this.showEditModal = false;
+                    this.editingSession = null;
                 },
 
                 deleteSessionByDate(dateStr) {

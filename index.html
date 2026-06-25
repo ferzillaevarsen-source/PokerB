@@ -486,6 +486,23 @@
                                     <span class="text-purple-400">↑ Вывод сегодня: </span>
                                     <span x-text="formatCurrency(site.totalWithdrawals - getPreviousWithdrawals(site), site.currency)"></span>
                                 </div>
+                                <!-- История выводов -->
+                                <div x-show="site.withdrawalHistory && site.withdrawalHistory.length > 0" class="mt-3">
+                                    <button @click="site._showHistory = !site._showHistory"
+                                            class="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors">
+                                        <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                                        <span x-text="'История (' + (site.withdrawalHistory ? site.withdrawalHistory.length : 0) + ')'"></span>
+                                        <i class="fa-solid fa-chevron-down text-xs transition-transform" :class="site._showHistory ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="site._showHistory" class="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                                        <template x-for="(entry, ei) in [...(site.withdrawalHistory || [])].reverse()" :key="ei">
+                                            <div class="flex justify-between items-center text-xs px-2 py-1 rounded-lg bg-slate-800/40">
+                                                <span class="text-slate-500" x-text="formatDate(entry.date)"></span>
+                                                <span class="text-orange-400 font-semibold" x-text="'+' + formatCurrency(entry.amount, site.currency)"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </div>
@@ -520,18 +537,30 @@
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="border-b border-slate-700">
-                                            <th class="text-left py-3 px-3 font-semibold text-slate-400">Дата</th>
-                                            <th class="text-right py-3 px-3 font-semibold text-slate-400">Прибыль RUB</th>
-                                            <th class="text-right py-3 px-3 font-semibold text-slate-400">Прибыль USD</th>
-                                            <th class="text-right py-3 px-3 font-semibold text-slate-400">Выводы RUB</th>
+                                            <th @click="setSortBy('date')" class="text-left py-3 px-3 font-semibold text-slate-400 cursor-pointer hover:text-white select-none">
+                                                Дата <i :class="getSortIcon('date')" class="ml-1 text-xs"></i>
+                                            </th>
+                                            <th @click="setSortBy('profitRUB')" class="text-right py-3 px-3 font-semibold text-slate-400 cursor-pointer hover:text-white select-none">
+                                                Прибыль RUB <i :class="getSortIcon('profitRUB')" class="ml-1 text-xs"></i>
+                                            </th>
+                                            <th @click="setSortBy('profitUSD')" class="text-right py-3 px-3 font-semibold text-slate-400 cursor-pointer hover:text-white select-none">
+                                                Прибыль USD <i :class="getSortIcon('profitUSD')" class="ml-1 text-xs"></i>
+                                            </th>
+                                            <th @click="setSortBy('wdRUB')" class="text-right py-3 px-3 font-semibold text-slate-400 cursor-pointer hover:text-white select-none">
+                                                Выводы RUB <i :class="getSortIcon('wdRUB')" class="ml-1 text-xs"></i>
+                                            </th>
                                             <th class="text-right py-3 px-3 font-semibold text-slate-400">Выводы USD</th>
                                             <th class="text-center py-3 px-3 font-semibold text-slate-400"></th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <template x-for="(session, index) in [...getDailySessionsWithDelta()].reverse()" :key="index">
-                                            <tr class="stat-row border-b border-slate-800/50 transition-colors">
-                                                <td class="py-3 px-3 font-medium" x-text="formatDate(session.date)"></td>
+                                    <template x-for="(session, index) in getSortedSessions()" :key="index">
+                                        <tbody>
+                                            <tr @click="toggleExpand(session.date)" class="stat-row border-b border-slate-800/50 transition-colors cursor-pointer">
+                                                <td class="py-3 px-3 font-medium">
+                                                    <span x-text="formatDate(session.date)"></span>
+                                                    <i class="fa-solid fa-chevron-down text-slate-600 text-xs ml-2 transition-transform"
+                                                       :class="expandedSessionDate && new Date(expandedSessionDate).toLocaleDateString('ru-RU') === new Date(session.date).toLocaleDateString('ru-RU') ? 'rotate-180' : ''"></i>
+                                                </td>
                                                 <td class="py-3 px-3 text-right font-bold"
                                                     :class="session.profitRUBDelta >= 0 ? 'text-green-400' : 'text-red-400'"
                                                     x-text="formatCurrency(session.profitRUBDelta, 'RUB')"></td>
@@ -542,7 +571,7 @@
                                                     x-text="session.withdrawalsRUBDelta > 0 ? formatCurrency(session.withdrawalsRUBDelta, 'RUB') : '—'"></td>
                                                 <td class="py-3 px-3 text-right text-purple-400"
                                                     x-text="session.withdrawalsUSDDelta > 0 ? formatCurrency(session.withdrawalsUSDDelta, 'USD') : '—'"></td>
-                                                <td class="py-3 px-3 text-center">
+                                                <td class="py-3 px-3 text-center" @click.stop>
                                                     <div class="flex gap-1.5 justify-center">
                                                         <button @click="editSession(session)"
                                                                 class="px-3 py-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition-all text-xs"
@@ -557,8 +586,23 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                        </template>
-                                    </tbody>
+                                            <!-- Разворачиваемая детализация по румам -->
+                                            <tr x-show="expandedSessionDate && new Date(expandedSessionDate).toLocaleDateString('ru-RU') === new Date(session.date).toLocaleDateString('ru-RU')"
+                                                class="bg-slate-800/20 border-b border-slate-800/50">
+                                                <td colspan="6" class="px-4 py-3">
+                                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                        <template x-for="sd in session.siteDeltas" :key="sd.id">
+                                                            <div class="flex justify-between items-center bg-slate-800/60 rounded-xl px-3 py-2 text-xs">
+                                                                <span class="text-slate-400 font-medium" x-text="sd.name"></span>
+                                                                <span class="font-bold ml-2" :class="sd.profit >= 0 ? 'text-green-400' : 'text-red-400'"
+                                                                      x-text="formatCurrency(sd.profit, sd.currency)"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </template>
                                     <!-- Итого -->
                                     <tfoot x-show="getDailySessionsWithDelta().length > 0">
                                         <tr class="border-t-2 border-slate-600 bg-slate-800/20">
@@ -646,8 +690,9 @@
                     <div class="grid grid-cols-7 gap-1">
                         <template x-for="(day, idx) in getCalendarDays()" :key="idx">
                             <div class="calendar-day"
-                                 :class="{ 'profit': day.profit > 0, 'loss': day.profit < 0, 'break-even': day.profit === 0 && day.hasData, 'today': day.isToday, 'opacity-10': !day.day }"
+                                 :class="{ 'profit': day.profit > 0, 'loss': day.profit < 0, 'break-even': day.profit === 0 && day.hasData, 'today': day.isToday, 'opacity-10': !day.day, 'cursor-pointer': day.hasData }"
                                  :title="day.hasData ? formatCurrency(day.profit, 'RUB') : ''"
+                                 @click="openCalendarPopup(day)"
                                  x-text="day.day || ''"></div>
                         </template>
                     </div>
@@ -692,7 +737,7 @@
     <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 via-slate-900/80 to-transparent backdrop-blur-md border-t border-slate-700/50 pt-6 pb-4 px-4 z-50">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-wrap justify-center items-center gap-3">
-                <button @click="saveTodaySession()" class="px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
+                <button @click="showSaveConfirmModal = true" class="px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
                     <i class="fa-solid fa-floppy-disk text-xl"></i>
                     <span x-text="sessionDate === new Date().toISOString().split('T')[0] ? 'Сохранить за сегодня' : 'Сохранить за ' + new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'short'})"></span>
                 </button>
@@ -737,6 +782,86 @@
                     <button @click="showAddRoomModal = false; newRoomName = ''" class="flex-1 px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition-colors">Отмена</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Save Confirmation -->
+    <div x-show="showSaveConfirmModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="showSaveConfirmModal = false">
+        <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
+                    <i class="fa-solid fa-floppy-disk text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">Подтверждение сохранения</h3>
+                    <p class="text-sm text-slate-400" x-text="'Дата: ' + new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long'})"></p>
+                </div>
+            </div>
+            <div class="space-y-2 mb-6">
+                <template x-for="site in sites" :key="'conf-' + site.id">
+                    <div class="flex justify-between items-center bg-slate-800/40 rounded-xl px-4 py-2.5">
+                        <span class="text-sm font-medium" x-text="site.name"></span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-slate-400" x-text="formatCurrency(site.currentBalance, site.currency)"></span>
+                            <span class="text-sm font-bold" :class="calculateSiteProfit(site) >= 0 ? 'text-green-400' : 'text-red-400'"
+                                  x-text="(calculateSiteProfit(site) >= 0 ? '+' : '') + formatCurrency(calculateSiteProfit(site), site.currency)"></span>
+                        </div>
+                    </div>
+                </template>
+                <div class="border-t border-slate-700 pt-2 mt-2 flex justify-between items-center">
+                    <span class="text-sm font-semibold text-slate-300">Итого прибыль</span>
+                    <div class="flex gap-3">
+                        <span class="font-bold" :class="totalProfitRUB >= 0 ? 'text-green-400' : 'text-red-400'"
+                              x-text="(totalProfitRUB >= 0 ? '+' : '') + formatCurrency(totalProfitRUB, 'RUB')"></span>
+                        <span class="font-bold" :class="totalProfitUSD >= 0 ? 'text-green-400' : 'text-red-400'"
+                              x-text="(totalProfitUSD >= 0 ? '+' : '') + formatCurrency(totalProfitUSD, 'USD')"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button @click="saveTodaySession(); showSaveConfirmModal = false"
+                        class="flex-1 py-3 rounded-2xl gradient-primary hover:opacity-90 font-bold transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> Сохранить
+                </button>
+                <button @click="showSaveConfirmModal = false"
+                        class="px-6 py-3 rounded-2xl bg-slate-700 hover:bg-slate-600 font-semibold transition-all">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Calendar Day Popup -->
+    <div x-show="calendarPopup" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="closeCalendarPopup()">
+        <div class="glass rounded-3xl p-8 max-w-md w-full animate-slide-up" x-show="calendarPopup">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold" x-text="calendarPopup ? new Date(calendarPopup.date).toLocaleDateString('ru-RU', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) : ''"></h3>
+                </div>
+                <button @click="closeCalendarPopup()" class="w-9 h-9 rounded-xl bg-slate-700 hover:bg-slate-600 flex items-center justify-center transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <template x-if="calendarPopup && calendarPopup.session">
+                <div class="space-y-2">
+                    <template x-for="sd in calendarPopup.session.siteDeltas" :key="sd.id">
+                        <div class="flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3">
+                            <span class="font-medium" x-text="sd.name"></span>
+                            <span class="font-bold" :class="sd.profit >= 0 ? 'text-green-400' : 'text-red-400'"
+                                  x-text="(sd.profit >= 0 ? '+' : '') + formatCurrency(sd.profit, sd.currency)"></span>
+                        </div>
+                    </template>
+                    <div class="border-t border-slate-700 pt-3 flex justify-between items-center">
+                        <span class="font-semibold text-slate-300">Итого</span>
+                        <div class="flex gap-3">
+                            <span class="font-bold" :class="calendarPopup.session.profitRUBDelta >= 0 ? 'text-green-400' : 'text-red-400'"
+                                  x-text="formatCurrency(calendarPopup.session.profitRUBDelta, 'RUB')"></span>
+                            <span class="font-bold text-slate-400"
+                                  x-text="formatCurrency(calendarPopup.session.profitUSDDelta, 'USD')"></span>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -836,7 +961,12 @@
                 showAddRoomModal: false,
                 showGoalsModal: false,
                 showEditModal: false,
+                showSaveConfirmModal: false,
                 editingSession: null,
+                expandedSessionDate: null,
+                statsSortBy: 'date',
+                statsSortDir: 'desc',
+                calendarPopup: null,
                 sessionDate: new Date().toISOString().split('T')[0],
                 newRoomName: '',
                 newRoomCurrency: 'USD',
@@ -1086,6 +1216,43 @@
                     return sessions.reduce((m, s) => (s.profitRUBDelta || 0) > (m.profitRUBDelta || 0) ? s : m).date;
                 },
 
+                getSortedSessions() {
+                    const sessions = [...this.getDailySessionsWithDelta()];
+                    sessions.sort((a, b) => {
+                        let va, vb;
+                        if      (this.statsSortBy === 'date')       { va = new Date(a.date); vb = new Date(b.date); }
+                        else if (this.statsSortBy === 'profitRUB')  { va = a.profitRUBDelta; vb = b.profitRUBDelta; }
+                        else if (this.statsSortBy === 'profitUSD')  { va = a.profitUSDDelta; vb = b.profitUSDDelta; }
+                        else if (this.statsSortBy === 'wdRUB')      { va = a.withdrawalsRUBDelta; vb = b.withdrawalsRUBDelta; }
+                        else                                         { va = new Date(a.date); vb = new Date(b.date); }
+                        return this.statsSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+                    });
+                    return sessions;
+                },
+
+                setSortBy(col) {
+                    if (this.statsSortBy === col) {
+                        this.statsSortDir = this.statsSortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.statsSortBy = col;
+                        this.statsSortDir = 'desc';
+                    }
+                },
+
+                getSortIcon(col) {
+                    if (this.statsSortBy !== col) return 'fa-solid fa-sort text-slate-600';
+                    return this.statsSortDir === 'asc' ? 'fa-solid fa-sort-up text-blue-400' : 'fa-solid fa-sort-down text-blue-400';
+                },
+
+                toggleExpand(dateStr) {
+                    const key     = new Date(dateStr).toLocaleDateString('ru-RU');
+                    const current = this.expandedSessionDate ? new Date(this.expandedSessionDate).toLocaleDateString('ru-RU') : null;
+                    this.expandedSessionDate = current === key ? null : dateStr;
+                },
+
+                openCalendarPopup(day) { if (day.hasData) this.calendarPopup = day; },
+                closeCalendarPopup()   { this.calendarPopup = null; },
+
                 getDailySessions() {
                     const map = new Map();
                     this.history.forEach(s => {
@@ -1101,6 +1268,7 @@
                     return sessions.map((s, i) => {
                         const prev = i > 0 ? sessions[i - 1] : null;
                         let profitRUB = 0, profitUSD = 0, withdrawalsRUB = 0, withdrawalsUSD = 0;
+                        const siteDeltas = [];
 
                         if (s.sites) {
                             s.sites.forEach(site => {
@@ -1116,7 +1284,6 @@
                                 } else {
                                     const b = parseFloat(prevSite.currentBalance) || 0;
                                     if (b === 0) {
-                                        // Если предыдущий баланс = 0, проверяем был ли ненулевой баланс ещё раньше
                                         const hadNonZero = sessions.slice(0, i - 1).some(s =>
                                             s.sites && s.sites.some(ps => ps.id === site.id && parseFloat(ps.currentBalance) > 0)
                                         );
@@ -1128,6 +1295,7 @@
 
                                 const wdDelta = totalWd - prevWd;
                                 const delta   = cur - prevBal;
+                                siteDeltas.push({ id: site.id, name: site.name, currency: site.currency, profit: delta, withdrawal: wdDelta });
 
                                 if (site.currency === 'RUB') {
                                     profitRUB      += delta;
@@ -1149,7 +1317,7 @@
                             });
                         }
 
-                        return { ...s, profitRUBDelta: profitRUB, profitUSDDelta: profitUSD, withdrawalsRUBDelta: withdrawalsRUB, withdrawalsUSDDelta: withdrawalsUSD };
+                        return { ...s, profitRUBDelta: profitRUB, profitUSDDelta: profitUSD, withdrawalsRUBDelta: withdrawalsRUB, withdrawalsUSDDelta: withdrawalsUSD, siteDeltas };
                     });
                 },
 
@@ -1199,7 +1367,7 @@
                         const date = new Date(y, m, d);
                         const key  = date.toLocaleDateString('ru-RU');
                         const sess = sessionMap.get(key);
-                        days.push({ day: d, date, profit: sess ? (sess.profitRUBDelta || 0) : 0, hasData: !!sess, isToday: date.toDateString() === today.toDateString() });
+                        days.push({ day: d, date, profit: sess ? (sess.profitRUBDelta || 0) : 0, hasData: !!sess, isToday: date.toDateString() === today.toDateString(), session: sess || null });
                     }
                     return days;
                 },
@@ -1242,6 +1410,8 @@
                     const amt = parseFloat(site.newWithdrawal);
                     if (amt > 0) {
                         site.totalWithdrawals += amt;
+                        site.withdrawalHistory = site.withdrawalHistory || [];
+                        site.withdrawalHistory.push({ date: new Date().toISOString(), amount: amt });
                         site.newWithdrawal = '';
                         this.showNotification(`Вывод +${amt} ${site.currency} добавлен`, 'success');
                     }

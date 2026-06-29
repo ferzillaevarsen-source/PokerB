@@ -1283,20 +1283,25 @@
                     const winDays  = sessions.filter(s => s.profitRUBDelta > 0).length;
                     const total    = sessions.length;
                     const winRate  = total > 0 ? ((winDays / total) * 100).toFixed(0) : 0;
+                    const totalPLRUB = this.sites.reduce((acc, s) => {
+                        const pl = this.getSiteTotalPL(s);
+                        return acc + (s.currency === 'RUB' ? pl : pl * this.exchangeRate);
+                    }, 0);
+                    const totalPLUSD = totalPLRUB / this.exchangeRate;
                     return [
                         {
-                            label: 'Прибыль за сегодня',
-                            value: this.formatCurrency(this.totalProfitRUB, 'RUB'),
-                            subtitle: this.formatCurrency(this.totalProfitUSD, 'USD'),
+                            label: 'Общий P&L',
+                            value: this.formatCurrency(totalPLRUB, 'RUB'),
+                            subtitle: this.formatCurrency(totalPLUSD, 'USD'),
                             icon: 'fa-solid fa-sack-dollar',
                             color: 'bg-gradient-to-br from-green-400 to-emerald-600',
-                            valueColor: this.totalProfitRUB >= 0 ? 'text-green-400' : 'text-red-400',
+                            valueColor: totalPLRUB >= 0 ? 'text-green-400' : 'text-red-400',
                             badge: ''
                         },
                         {
-                            label: 'Выведено сегодня',
-                            value: this.formatCurrency(this.totalWithdrawalsRUB, 'RUB'),
-                            subtitle: 'за текущий день',
+                            label: 'Всего выведено',
+                            value: this.formatCurrency(this.totalHistoryWithdrawalsRUB, 'RUB'),
+                            subtitle: this.formatCurrency(this.totalHistoryWithdrawalsUSD, 'USD'),
                             icon: 'fa-solid fa-money-bill-transfer',
                             color: 'bg-gradient-to-br from-blue-400 to-cyan-600',
                             valueColor: 'text-blue-400',

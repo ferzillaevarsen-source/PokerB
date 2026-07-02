@@ -1225,12 +1225,14 @@
                     return 0;
                 },
 
-                // Прибыль = чистый результат игры: балансСегодня − балансВчера
-                // Выводы не влияют на прибыль — они учитываются отдельно
+                // Прибыль = (балансСегодня + выводЗаДень) − балансВчера
+                // Если вывел деньги из рума и ввёл новый баланс — прибыль считается корректно
                 calculateSiteProfit(site) {
-                    const current     = parseFloat(site.currentBalance) || 0;
-                    const prevBalance = this.getPreviousBalance(site);
-                    return current - prevBalance;
+                    const current          = parseFloat(site.currentBalance) || 0;
+                    const prevBalance      = this.getPreviousBalance(site);
+                    const prevWithdrawals  = this.getPreviousWithdrawals(site);
+                    const withdrawalDelta  = (parseFloat(site.totalWithdrawals) || 0) - prevWithdrawals;
+                    return current + withdrawalDelta - prevBalance;
                 },
 
                 getSiteTotalPL(site) {
@@ -1500,7 +1502,7 @@
                                 }
 
                                 const wdDelta = totalWd - prevWd;
-                                const delta   = cur - prevBal;
+                                const delta   = cur + wdDelta - prevBal;
                                 siteDeltas.push({ id: site.id, name: site.name, currency: site.currency, profit: delta, withdrawal: wdDelta });
 
                                 if (site.currency === 'RUB') {

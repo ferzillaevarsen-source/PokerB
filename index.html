@@ -31,15 +31,27 @@
     </script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            --bg: #07130e;
+            --panel: rgba(12,33,26,0.65);
+            --panel2: rgba(17,43,33,0.85);
+            --border: rgba(212,175,55,0.22);
+            --gold: #d4af37;
+            --gold2: #eed37c;
+            --ink: #f0e9d8;
+            --muted: #93a89b;
+            --pos: #5bcd8f;
+            --neg: #e0705f;
+        }
+        body { font-family: 'Inter', sans-serif; color: var(--ink); }
         .glass {
-            background: rgba(255,255,255,0.05);
+            background: var(--panel);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
         }
         .dark .glass {
-            background: rgba(15,23,42,0.6);
-            border: 1px solid rgba(255,255,255,0.05);
+            background: var(--panel);
+            border: 1px solid var(--border);
         }
         .tooltip { position: relative; }
         .tooltip::after {
@@ -62,7 +74,7 @@
         }
         .tooltip:hover::after { opacity: 1; visibility: visible; bottom: calc(100% + 8px); }
         .dragging { opacity: 0.5; transform: scale(0.95); }
-        .drag-over { border: 2px dashed #00FF88 !important; background: rgba(0,255,136,0.1) !important; }
+        .drag-over { border: 2px dashed var(--gold) !important; background: rgba(212,175,55,0.08) !important; }
         .calendar-day {
             aspect-ratio: 1;
             display: flex;
@@ -78,16 +90,16 @@
         .calendar-day.profit { background: linear-gradient(135deg,#10B981,#059669); color: white; }
         .calendar-day.loss { background: linear-gradient(135deg,#EF4444,#DC2626); color: white; }
         .calendar-day.break-even { background: rgba(148,163,184,0.3); color: #94A3B8; }
-        .calendar-day.today { border: 2px solid #00FF88; }
+        .calendar-day.today { border: 2px solid var(--gold); }
         .dropdown { position: relative; }
         .dropdown-menu {
             position: absolute;
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%) translateY(-10px);
-            background: rgba(15,23,42,0.95);
+            background: rgba(12,33,26,0.98);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 8px;
             min-width: 220px;
@@ -98,32 +110,61 @@
         }
         .dropdown:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(-5px); }
         .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; }
-        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
+        .dropdown-item:hover { background: rgba(212,175,55,0.1); }
         .alert-enter { animation: alertSlideIn 0.4s ease-out; }
         @keyframes alertSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .gradient-text {
-            background: linear-gradient(135deg,#00FF88 0%,#00D4FF 100%);
+            background: linear-gradient(135deg, var(--gold2) 0%, var(--gold) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .animated-bg {
-            background: linear-gradient(-45deg,#0f172a,#1e1b4b,#312e81,#0f172a);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            background-color: var(--bg);
+            position: relative;
         }
-        @keyframes gradient { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        .theme-neon .gradient-primary    { background: linear-gradient(135deg,#00FF88 0%,#00D4FF 100%) !important; }
-        .theme-cyberpunk .gradient-primary { background: linear-gradient(135deg,#FF00FF 0%,#00FFFF 100%) !important; }
-        .theme-blue .gradient-primary    { background: linear-gradient(135deg,#3B82F6 0%,#1E40AF 100%) !important; }
-        .theme-classic .gradient-primary  { background: linear-gradient(135deg,#10B981 0%,#059669 100%) !important; }
-        .theme-poker .gradient-primary   { background: linear-gradient(135deg,#059669 0%,#047857 100%) !important; }
-        .theme-casino .gradient-primary  { background: linear-gradient(135deg,#DC2626 0%,#991B1B 100%) !important; }
+        .animated-bg::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 640px;
+            background: radial-gradient(ellipse 1000px 640px at 50% -100px, rgba(212,175,55,0.09), transparent 62%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Тема: Изумруд */
+        .theme-izumrud { --bg:#07130e; --panel:rgba(12,33,26,0.65); --panel2:rgba(17,43,33,0.85); --border:rgba(212,175,55,.22); --muted:#93a89b; }
+        .theme-izumrud.animated-bg { background-color: #07130e; }
+        .theme-izumrud .gradient-primary { background: linear-gradient(135deg,#eed37c 0%,#d4af37 100%) !important; }
+
+        /* Тема: Бордо */
+        .theme-bordo { --bg:#150609; --panel:rgba(33,13,20,0.65); --panel2:rgba(43,18,27,0.85); --border:rgba(212,175,55,.25); --muted:#b09aa1; }
+        .theme-bordo.animated-bg { background-color: #150609; }
+        .theme-bordo .glass { background: rgba(33,13,20,0.65); border-color: rgba(212,175,55,.25); }
+        .theme-bordo .dropdown-menu { background: rgba(33,13,20,0.98); border-color: rgba(212,175,55,.25); }
+        .theme-bordo .gradient-primary { background: linear-gradient(135deg,#eed37c 0%,#d4af37 100%) !important; }
+
+        /* Тема: Полночь */
+        .theme-polnoch { --bg:#070a12; --panel:rgba(14,19,34,0.65); --panel2:rgba(20,27,48,0.85); --border:rgba(212,175,55,.22); --muted:#8e97ad; }
+        .theme-polnoch.animated-bg { background-color: #070a12; }
+        .theme-polnoch .glass { background: rgba(14,19,34,0.65); }
+        .theme-polnoch .dropdown-menu { background: rgba(14,19,34,0.98); }
+        .theme-polnoch .gradient-primary { background: linear-gradient(135deg,#eed37c 0%,#d4af37 100%) !important; }
+
+        .action-bar {
+            background: linear-gradient(to top, var(--bg) 40%, rgba(7,19,14,0.8) 75%, transparent);
+            border-top: 1px solid var(--border);
+        }
+        .theme-bordo .action-bar { background: linear-gradient(to top, #150609 40%, rgba(21,6,9,0.8) 75%, transparent); }
+        .theme-polnoch .action-bar { background: linear-gradient(to top, #070a12 40%, rgba(7,10,18,0.8) 75%, transparent); }
+        input, select, textarea { color: var(--ink); }
+        input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
         [x-cloak] { display: none !important; }
-        .stat-row:hover { background: rgba(255,255,255,0.04); }
+        .stat-row:hover { background: rgba(212,175,55,0.05); }
     </style>
 </head>
-<body class="animated-bg text-white min-h-screen pb-32"
+<body class="animated-bg min-h-screen pb-32"
       x-data="pokerApp()"
       x-init="initApp()"
       :class="'theme-' + currentTheme"
@@ -185,17 +226,14 @@
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="glass rounded-2xl px-5 py-3">
                             <p class="text-xs text-slate-400 mb-1 text-center">Тема</p>
-                            <select x-model="currentTheme" @change="applyTheme()" class="bg-slate-800/50 border border-slate-700 rounded-xl px-3 py-1.5 text-sm">
-                                <option value="neon">Неоновая</option>
-                                <option value="cyberpunk">Cyberpunk</option>
-                                <option value="blue">Синяя</option>
-                                <option value="classic">Классика</option>
-                                <option value="poker">Покерная</option>
-                                <option value="casino">Казино</option>
+                            <select x-model="currentTheme" @change="applyTheme()" class="rounded-xl px-3 py-1.5 text-sm border" style="background:rgba(12,33,26,0.9);border-color:var(--border);color:var(--ink)">
+                                <option value="izumrud">Изумруд</option>
+                                <option value="bordo">Бордо</option>
+                                <option value="polnoch">Полночь</option>
                             </select>
                         </div>
                         <div class="glass rounded-2xl px-5 py-3 flex items-center gap-3">
-                            <i class="fa-solid fa-money-bill-transfer text-cyan-400 text-xl"></i>
+                            <i class="fa-solid fa-money-bill-transfer text-yellow-400 text-xl"></i>
                             <div>
                                 <div class="flex items-center gap-1.5">
                                     <p class="text-xs text-slate-400">USD/RUB</p>
@@ -833,7 +871,7 @@
     </button>
 
     <!-- Action Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 via-slate-900/80 to-transparent backdrop-blur-md border-t border-slate-700/50 pt-6 pb-4 px-4 z-50">
+    <div class="fixed bottom-0 left-0 right-0 action-bar backdrop-blur-md pt-6 pb-4 px-4 z-50">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-wrap justify-center items-center gap-3">
                 <button @click="showSaveConfirmModal = true" class="px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
@@ -842,7 +880,7 @@
                 </button>
                 <button @click="copyDailyResult()" title="Скопировать результат дня для Telegram"
                         class="px-6 py-4 rounded-2xl bg-slate-700 hover:bg-slate-600 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-2 transition-all">
-                    <i class="fa-solid fa-share-nodes text-cyan-400 text-xl"></i>
+                    <i class="fa-solid fa-share-nodes text-yellow-400 text-xl"></i>
                     <span class="text-sm">Поделиться</span>
                 </button>
                 <div class="dropdown">
@@ -1099,7 +1137,7 @@
                 exchangeRate: 90.50,
                 loadingRate: false,
                 statsView: 'days',
-                currentTheme: 'neon',
+                currentTheme: 'izumrud',
                 history: [],
                 showAddRoomModal: false,
                 showGoalsModal: false,
@@ -1143,7 +1181,9 @@
                             this.baseDeposits    = data.baseDeposits    || {};
                             this.goals           = data.goals           || this.goals;
                             this.history         = data.history         || [];
-                            this.currentTheme    = data.currentTheme    || 'neon';  // БАГ ИСПРАВЛЕН
+                            const legacyThemes = {neon:'izumrud',cyberpunk:'izumrud',blue:'polnoch',classic:'izumrud',poker:'izumrud',casino:'bordo'};
+                            const savedTheme = data.currentTheme || 'izumrud';
+                            this.currentTheme = legacyThemes[savedTheme] || savedTheme;
                             if (data.calendarDate) this.calendarDate = new Date(data.calendarDate);
                             if (data.sites) this.sites = data.sites;
 
@@ -1179,8 +1219,10 @@
                 },
 
                 applyTheme() {
-                    document.body.classList.remove('theme-neon','theme-cyberpunk','theme-blue','theme-classic','theme-poker','theme-casino');
+                    const bgMap = { izumrud:'#07130e', bordo:'#150609', polnoch:'#070a12' };
+                    document.body.classList.remove('theme-izumrud','theme-bordo','theme-polnoch');
                     document.body.classList.add('theme-' + this.currentTheme);
+                    document.body.style.backgroundColor = bgMap[this.currentTheme] || '#07130e';
                     this.saveToStorage();
                 },
 
@@ -1731,7 +1773,7 @@
                             this.history       = d.history       || [];
                             this.baseDeposits  = d.baseDeposits  || {};
                             this.goals         = d.goals         || this.goals;
-                            this.currentTheme  = d.currentTheme  || 'neon';
+                            this.currentTheme  = d.currentTheme  || 'izumrud';
                             if (d.calendarDate) this.calendarDate = new Date(d.calendarDate);
                             this.applyTheme();
                             this.saveToStorage();

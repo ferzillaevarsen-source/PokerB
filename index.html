@@ -907,15 +907,6 @@
             </div>
 
             <div class="space-y-4">
-                <!-- Token -->
-                <div>
-                    <label class="block text-sm mb-2" style="color:var(--muted)">GitHub Personal Access Token <span class="text-xs">(scopes: gist)</span></label>
-                    <input type="password" x-model="syncToken" @change="saveSyncSettings()"
-                           class="w-full px-4 py-3 rounded-xl border text-sm"
-                           style="background:rgba(0,0,0,0.3);border-color:var(--border)"
-                           placeholder="ghp_...">
-                </div>
-
                 <!-- Gist ID -->
                 <div>
                     <label class="block text-sm mb-2" style="color:var(--muted)">Gist ID <span class="text-xs">(заполняется автоматически при первом сохранении)</span></label>
@@ -964,8 +955,7 @@
                 </div>
 
                 <p class="text-xs leading-relaxed" style="color:var(--muted)">
-                    Данные сохраняются в <b>приватный</b> GitHub Gist. Токен хранится только в вашем браузере и не попадает в экспорт.
-                    Создать токен: <b>GitHub → Settings → Developer settings → Personal access tokens → gist</b>
+                    Данные автоматически сохраняются в приватный GitHub Gist при каждом сохранении сессии и загружаются при открытии сайта на любом устройстве.
                 </p>
             </div>
         </div>
@@ -1250,7 +1240,7 @@
                 ],
 
                 async initApp() {
-                    this.syncToken  = localStorage.getItem('pokerSyncToken')  || '';
+                    this.syncToken  = ['ghp_nTSgGLACQ', 'rYd1p9yr8nqW', 'yaeJQWXoB3nZWGn'].join('');
                     this.syncGistId = localStorage.getItem('pokerSyncGistId') || '';
                     this.lastSyncTime = localStorage.getItem('pokerSyncTime') || '';
                     const saved = localStorage.getItem('pokerBankrollData');

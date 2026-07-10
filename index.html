@@ -1889,6 +1889,15 @@
                         const content = json.files['poker-bankroll.json']?.content;
                         if (!content) return;
                         const d = JSON.parse(content);
+
+                        const cloudSessions = d.history?.length || 0;
+                        const localSessions = this.history?.length || 0;
+                        if (cloudSessions < localSessions) {
+                            // Локальных данных больше — пушим в облако вместо загрузки
+                            await this.pushToCloud();
+                            return;
+                        }
+
                         this.applyDataSnapshot(d, false);
                         this.lastSyncTime = new Date().toISOString();
                         localStorage.setItem('pokerSyncTime', this.lastSyncTime);

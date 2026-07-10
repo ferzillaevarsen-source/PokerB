@@ -314,6 +314,48 @@
             </template>
         </div>
 
+        <!-- Bankroll Chart -->
+        <div class="mb-8 animate-slide-up" style="animation-delay:0.5s">
+            <div class="glass rounded-3xl p-8">
+                <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
+                            <i class="fa-solid fa-chart-line text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold">📈 График банкролла</h2>
+                            <p class="text-sm" style="color:var(--muted)">
+                                Накопленная прибыль, ₽
+                                <template x-if="chartRangeLabels">
+                                    <span class="font-semibold" :style="'color:' + (chartRangeLabels.total >= 0 ? 'var(--pos)' : 'var(--neg)')"
+                                          x-text="' · ' + (chartRangeLabels.total >= 0 ? '+' : '') + Math.round(chartRangeLabels.total).toLocaleString('ru-RU') + ' ₽'"></span>
+                                </template>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="chartPeriod = '30'"
+                                class="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                                :class="chartPeriod === '30' ? 'gradient-primary' : 'border'"
+                                :style="chartPeriod === '30' ? '' : 'border-color:var(--border);color:var(--muted)'">30 дней</button>
+                        <button @click="chartPeriod = 'all'"
+                                class="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                                :class="chartPeriod === 'all' ? 'gradient-primary' : 'border'"
+                                :style="chartPeriod === 'all' ? '' : 'border-color:var(--border);color:var(--muted)'">Всё время</button>
+                    </div>
+                </div>
+                <div x-show="chartSVG" x-html="chartSVG"></div>
+                <div x-show="chartRangeLabels" class="flex justify-between text-xs mt-2" style="color:var(--muted)">
+                    <span x-text="chartRangeLabels ? chartRangeLabels.from : ''"></span>
+                    <span x-text="chartRangeLabels ? chartRangeLabels.to : ''"></span>
+                </div>
+                <div x-show="!chartSVG" class="text-center py-10" style="color:var(--muted)">
+                    <i class="fa-solid fa-chart-line text-3xl mb-3 opacity-40"></i>
+                    <p>Сохраните хотя бы 2 сессии, чтобы увидеть график</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Room Summary -->
         <div class="mb-8 animate-slide-up" style="animation-delay:0.6s">
             <div class="glass rounded-3xl p-8">
@@ -1198,6 +1240,7 @@
                 exchangeRate: 90.50,
                 loadingRate: false,
                 statsView: 'days',
+                chartPeriod: 'all',
                 currentTheme: 'izumrud',
                 history: [],
                 showAddRoomModal: false,
@@ -1447,6 +1490,66 @@
                             badge: (() => { const s = this.getCurrentStreak(); return s.count > 1 ? (s.type === 'win' ? `🔥 ${s.count}` : `❄️ ${s.count}`) : ''; })()
                         }
                     ];
+                },
+
+                // ——— График банкролла (SVG строится строкой: template внутри <svg> ломает Alpine) ———
+                get chartData() {
+                    let sessions = this.getDailySessionsWithDelta();
+                    if (this.chartPeriod === '30') {
+                        const cutoff = Date.now() - 30 * 86400000;
+                        sessions = sessions.filter(s => new Date(s.date).getTime() >= cutoff);
+                    }
+                    let acc = 0;
+                    return sessions.map(s => {
+                        acc += s.profitRUBDelta || 0;
+                        return { date: s.date, value: acc, delta: s.profitRUBDelta || 0 };
+                    });
+                },
+
+                get chartRangeLabels() {
+                    const pts = this.chartData;
+                    if (pts.length < 2) return null;
+                    return {
+                        from:  new Date(pts[0].date).toLocaleDateString('ru-RU'),
+                        to:    new Date(pts[pts.length - 1].date).toLocaleDateString('ru-RU'),
+                        total: pts[pts.length - 1].value
+                    };
+                },
+
+                get chartSVG() {
+                    const pts = this.chartData;
+                    if (pts.length < 2) return '';
+                    const W = 800, H = 260, padX = 14, padY = 18;
+                    const vals = pts.map(p => p.value); vals.push(0);
+                    const min = Math.min(...vals), max = Math.max(...vals);
+                    const range = (max - min) || 1;
+                    const X = i => (padX + (W - 2 * padX) * i / (pts.length - 1)).toFixed(1);
+                    const Y = v => (padY + (H - 2 * padY) * (1 - (v - min) / range)).toFixed(1);
+                    const line  = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.value)}`).join(' ');
+                    const area  = `${line} L${X(pts.length - 1)},${H - padY} L${X(0)},${H - padY} Z`;
+                    const zeroY = Y(0);
+                    const color = pts[pts.length - 1].value >= 0 ? '#d4af37' : '#e0705f';
+                    // Точки с нативными tooltip — только если их не слишком много
+                    let dots = '';
+                    if (pts.length <= 62) {
+                        dots = pts.map((p, i) => {
+                            const d    = new Date(p.date).toLocaleDateString('ru-RU');
+                            const sign = p.delta >= 0 ? '+' : '';
+                            const fmt  = n => Math.round(n).toLocaleString('ru-RU');
+                            return `<circle cx="${X(i)}" cy="${Y(p.value)}" r="3.5" fill="#eed37c" stroke="rgba(0,0,0,0.5)" stroke-width="1" style="cursor:pointer"><title>${d}
+За день: ${sign}${fmt(p.delta)} ₽
+Всего: ${fmt(p.value)} ₽</title></circle>`;
+                        }).join('');
+                    }
+                    return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="bankrollFill" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="${color}" stop-opacity="0.35"/>
+<stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+</linearGradient></defs>
+<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="rgba(147,168,155,0.35)" stroke-width="1" stroke-dasharray="4 4"/>
+<path d="${area}" fill="url(#bankrollFill)"/>
+<path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+${dots}</svg>`;
                 },
 
                 addAlert(type, title, message) {

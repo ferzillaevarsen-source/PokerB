@@ -1284,10 +1284,12 @@
                             console.error('Ошибка загрузки данных:', e);
                         }
                     }
+                    // Синхронизация ДО applyTheme/fetchExchangeRate — они вызывают saveToStorage
+                    // и обновили бы updatedAt, из-за чего облако никогда не считалось бы новее
+                    if (this.syncToken) await this.autoSyncOnLoad();
                     this.applyTheme();
                     await this.fetchExchangeRate();
                     setInterval(() => this.fetchExchangeRate(), 5 * 60 * 1000);
-                    if (this.syncToken) await this.autoSyncOnLoad();
                 },
 
                 applyTheme() {
@@ -1301,6 +1303,7 @@
                 saveBaseDeposits() {
                     this.sites.forEach(s => this.baseDeposits[s.id] = parseFloat(s.initialDeposit) || 0);
                     this.saveToStorage();
+                    if (this.syncToken) this.pushToCloud(true);
                     this.showNotification('💾 Базовые депозиты сохранены', 'success');
                 },
 
@@ -1532,6 +1535,7 @@
                         this.sites[idx].initialDeposit = parseFloat(this.editingRoom.initialDeposit) || 0;
                         this.baseDeposits[this.editingRoom.id] = this.sites[idx].initialDeposit;
                         this.saveToStorage();
+                        if (this.syncToken) this.pushToCloud(true);
                         this.showNotification('Рум обновлён', 'success');
                     }
                     this.showEditRoomModal = false;
@@ -1739,6 +1743,7 @@
                         site.withdrawalHistory = site.withdrawalHistory || [];
                         site.withdrawalHistory.push({ date: new Date().toISOString(), amount: amt });
                         site.newWithdrawal = '';
+                        this.saveToStorage();
                         this.showNotification(`Вывод ${this.formatCurrency(amt, site.currency)} добавлен, баланс уменьшен`, 'success');
                     }
                 },
@@ -1753,6 +1758,7 @@
                 resetWithdrawals(site) {
                     if (!confirm(`Сбросить выводы ${site.name} до значения предыдущего дня (${this.formatCurrency(this.getPreviousWithdrawals(site), site.currency)})?`)) return;
                     site.totalWithdrawals = this.getPreviousWithdrawals(site);
+                    this.saveToStorage();
                     this.showNotification(`Выводы ${site.name} сброшены`, 'info');
                 },
 
@@ -1768,6 +1774,7 @@
                         this.history[idx] = JSON.parse(JSON.stringify(this.editingSession));
                         this.history.sort((a, b) => new Date(a.date) - new Date(b.date));
                         this.saveToStorage();
+                        if (this.syncToken) this.pushToCloud(true);
                         this.showNotification(`✅ Сессия за ${key} обновлена`, 'success');
                     }
                     this.closeEditModal();
@@ -1784,6 +1791,7 @@
                     this.history = this.history.filter(s => new Date(s.date).toLocaleDateString('ru-RU') !== key);
                     this.deletedSession = { sessions: deleted, key };
                     this.saveToStorage();
+                    if (this.syncToken) this.pushToCloud(true);
                     if (this.deleteUndoTimer) clearTimeout(this.deleteUndoTimer);
                     this.deleteUndoTimer = setTimeout(() => { this.deletedSession = null; }, 6000);
                 },
@@ -1795,6 +1803,7 @@
                     if (this.deleteUndoTimer) clearTimeout(this.deleteUndoTimer);
                     this.deletedSession = null;
                     this.saveToStorage();
+                    if (this.syncToken) this.pushToCloud(true);
                     this.showNotification('✅ Сессия восстановлена', 'success');
                 },
 
@@ -1810,6 +1819,7 @@
                     this.newRoomName = '';
                     this.showAddRoomModal = false;
                     this.saveToStorage();
+                    if (this.syncToken) this.pushToCloud(true);
                     this.showNotification(`Рум ${name} добавлен`, 'success');
                 },
 
@@ -1818,6 +1828,7 @@
                     if (confirm(`Удалить рум ${this.sites[i].name}?`)) {
                         this.sites.splice(i, 1);
                         this.saveToStorage();
+                        if (this.syncToken) this.pushToCloud(true);
                     }
                 },
 
@@ -1829,7 +1840,8 @@
                         baseDeposits: this.baseDeposits,
                         goals: this.goals,
                         calendarDate: this.calendarDate.toISOString(),
-                        currentTheme: this.currentTheme
+                        currentTheme: this.currentTheme,
+                        updatedAt: new Date().toISOString()
                     };
                 },
 
@@ -1908,14 +1920,21 @@
                         const cloudN = cloudData.history?.length || 0;
                         console.log('[Sync] сессий в GitHub:', cloudN);
 
-                        if (cloudN > localN) {
+                        // Облако новее: сессий больше, ИЛИ столько же, но updatedAt свежее
+                        // (ловит правки/удаления, не меняющие количество сессий)
+                        const cloudT = cloudData.updatedAt || '';
+                        const localT = localData?.updatedAt || '';
+                        const cloudNewer = cloudN > localN ||
+                            (cloudN === localN && cloudN > 0 && cloudT && cloudT > localT);
+
+                        if (cloudNewer) {
                             console.log('[Sync] загружаем из GitHub...');
                             localStorage.setItem('pokerBankrollData', JSON.stringify(cloudData));
                             localStorage.setItem('pokerSyncTime', new Date().toISOString());
                             sessionStorage.setItem('_syncReloaded', '1');
                             location.reload();
                         } else if (localN > cloudN) {
-                            await this.pushToCloud();
+                            await this.pushToCloud(true);
                         } else {
                             console.log('[Sync] данные актуальны');
                         }
@@ -1924,8 +1943,8 @@
                     }
                 },
 
-                async pushToCloud() {
-                    if (!this.syncToken) { this.showNotification('Введите GitHub токен', 'warning'); return; }
+                async pushToCloud(silent = false) {
+                    if (!this.syncToken) { if (!silent) this.showNotification('Введите GitHub токен', 'warning'); return; }
                     this.syncStatus = 'pushing';
                     try {
                         // Берём данные из localStorage (всегда актуальны после saveToStorage)
@@ -1950,12 +1969,11 @@
                         if (!res.ok) throw new Error(json.message || res.status);
                         this.syncGistId = json.id;
                         this.lastSyncTime = new Date().toISOString();
-                        localStorage.setItem('pokerSyncToken',  this.syncToken);
                         localStorage.setItem('pokerSyncGistId', this.syncGistId);
                         localStorage.setItem('pokerSyncTime',   this.lastSyncTime);
                         this.syncStatus = 'success';
                         this.syncMessage = isNew ? 'Гист создан и данные загружены' : 'Данные сохранены в GitHub';
-                        this.showNotification(this.syncMessage, 'success');
+                        if (!silent) this.showNotification(this.syncMessage, 'success');
                     } catch(e) {
                         this.syncStatus = 'error';
                         this.syncMessage = 'Ошибка: ' + e.message;
@@ -2032,14 +2050,15 @@
                     doc.setFontSize(18);
                     doc.text('Poker Bankroll Report', 20, 20);
                     doc.setFontSize(11);
-                    doc.text(`Дата: ${new Date().toLocaleDateString('ru-RU')}`, 20, 35);
-                    doc.text(`Всего прибыль: ${this.totalHistoryProfitRUB.toFixed(2)} RUB`, 20, 45);
-                    doc.text(`Всего прибыль: ${this.totalHistoryProfitUSD.toFixed(2)} USD`, 20, 55);
-                    doc.text(`Всего выведено: ${this.totalHistoryWithdrawalsRUB.toFixed(2)} RUB`, 20, 65);
-                    doc.text(`Сессий: ${this.history.length}`, 20, 75);
+                    // Английские подписи: стандартный шрифт jsPDF не поддерживает кириллицу
+                    doc.text(`Date: ${new Date().toLocaleDateString('ru-RU')}`, 20, 35);
+                    doc.text(`Total profit: ${this.totalHistoryProfitRUB.toFixed(2)} RUB`, 20, 45);
+                    doc.text(`Total profit: ${this.totalHistoryProfitUSD.toFixed(2)} USD`, 20, 55);
+                    doc.text(`Total withdrawn: ${this.totalHistoryWithdrawalsRUB.toFixed(2)} RUB`, 20, 65);
+                    doc.text(`Sessions: ${this.history.length}`, 20, 75);
                     let y = 95;
                     doc.setFontSize(10);
-                    doc.text('Дата', 20, y); doc.text('Прибыль RUB', 70, y); doc.text('Прибыль USD', 120, y); y += 8;
+                    doc.text('Date', 20, y); doc.text('Profit RUB', 70, y); doc.text('Profit USD', 120, y); y += 8;
                     this.getDailySessionsWithDelta().slice(-20).forEach(s => {
                         doc.text(this.formatDate(s.date), 20, y);
                         doc.text(s.profitRUBDelta.toFixed(2), 70, y);
@@ -2055,7 +2074,7 @@
                     location.reload();
                 },
 
-                saveGoals() { this.saveToStorage(); this.showGoalsModal = false; this.showNotification('Цели сохранены', 'success'); },
+                saveGoals() { this.saveToStorage(); if (this.syncToken) this.pushToCloud(true); this.showGoalsModal = false; this.showNotification('Цели сохранены', 'success'); },
                 getGoalProgress() {
                     const c = this.getCurrentMonthProfit();
                     return this.goals.monthlyProfit <= 0 ? 0 : Math.min(100, Math.max(0, (c / this.goals.monthlyProfit) * 100)).toFixed(1);
@@ -2088,7 +2107,8 @@
                     localStorage.setItem('pokerBankrollData', JSON.stringify({
                         exchangeRate: this.exchangeRate, sites: this.sites, history: this.history,
                         baseDeposits: this.baseDeposits, goals: this.goals,
-                        calendarDate: this.calendarDate.toISOString(), currentTheme: this.currentTheme
+                        calendarDate: this.calendarDate.toISOString(), currentTheme: this.currentTheme,
+                        updatedAt: new Date().toISOString()
                     }));
                     this.autoSaved = true;
                     setTimeout(() => this.autoSaved = false, 2000);

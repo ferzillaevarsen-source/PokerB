@@ -1851,21 +1851,39 @@
 
                 async autoSyncOnLoad() {
                     try {
-                        // Если нет gistId — ищем по токену среди всех гистов
-                        if (!this.syncGistId) {
+                        const findGist = async () => {
                             const res = await fetch('https://api.github.com/gists?per_page=100', {
                                 headers: { 'Authorization': `token ${this.syncToken}` }
                             });
                             const list = await res.json();
-                            if (!Array.isArray(list)) return;
-                            const found = list.find(g => g.files && g.files['poker-bankroll.json']);
+                            if (!Array.isArray(list)) return null;
+                            return list.find(g => g.files && g.files['poker-bankroll.json']) || null;
+                        };
+
+                        // Если нет gistId или он выглядит неправильно (например, содержит токен) — ищем заново
+                        const badId = !this.syncGistId || this.syncGistId.startsWith('ghp_') || this.syncGistId.length < 20;
+                        if (badId) {
+                            const found = await findGist();
                             if (!found) return;
                             this.syncGistId = found.id;
                             localStorage.setItem('pokerSyncGistId', this.syncGistId);
                         }
-                        const res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
+
+                        let res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
                             headers: { 'Authorization': `token ${this.syncToken}` }
                         });
+
+                        // Гист не найден по сохранённому ID — ищем заново
+                        if (res.status === 404) {
+                            const found = await findGist();
+                            if (!found) return;
+                            this.syncGistId = found.id;
+                            localStorage.setItem('pokerSyncGistId', this.syncGistId);
+                            res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
+                                headers: { 'Authorization': `token ${this.syncToken}` }
+                            });
+                        }
+
                         const json = await res.json();
                         if (!res.ok) return;
                         const content = json.files['poker-bankroll.json']?.content;

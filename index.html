@@ -1241,7 +1241,7 @@
 
                 async initApp() {
                     this.syncToken  = ['ghp_nTSgGLACQ', 'rYd1p9yr8nqW', 'yaeJQWXoB3nZWGn'].join('');
-                    this.syncGistId = localStorage.getItem('pokerSyncGistId') || '';
+                    this.syncGistId = localStorage.getItem('pokerSyncGistId') || '937b54e82f9eb81715792eef76e06c85';
                     this.lastSyncTime = localStorage.getItem('pokerSyncTime') || '';
                     const saved = localStorage.getItem('pokerBankrollData');
                     if (saved) {
@@ -1886,33 +1886,40 @@
                 },
 
                 async autoSyncOnLoad() {
+                    if (sessionStorage.getItem('_syncReloaded')) {
+                        sessionStorage.removeItem('_syncReloaded');
+                        return;
+                    }
                     try {
                         const localRaw  = localStorage.getItem('pokerBankrollData');
                         const localData = localRaw ? JSON.parse(localRaw) : null;
                         const localN    = localData?.history?.length || 0;
+                        console.log('[Sync] локальных сессий:', localN);
 
                         const cloudData = await this.getGistContent();
 
                         if (!cloudData) {
-                            // Гиста нет → пушим локальные данные если есть
+                            console.log('[Sync] облако пусто или недоступно');
                             if (localN > 0) await this.pushToCloud();
                             return;
                         }
 
                         const cloudN = cloudData.history?.length || 0;
+                        console.log('[Sync] сессий в GitHub:', cloudN);
 
                         if (cloudN > localN) {
-                            // В облаке больше — сохраняем в localStorage и перезагружаем
+                            console.log('[Sync] загружаем из GitHub...');
                             localStorage.setItem('pokerBankrollData', JSON.stringify(cloudData));
                             localStorage.setItem('pokerSyncTime', new Date().toISOString());
+                            sessionStorage.setItem('_syncReloaded', '1');
                             location.reload();
                         } else if (localN > cloudN) {
-                            // Локальных больше — пушим
                             await this.pushToCloud();
+                        } else {
+                            console.log('[Sync] данные актуальны');
                         }
-                        // Равно — ничего не делаем
                     } catch(e) {
-                        console.warn('autoSync error:', e);
+                        console.warn('[Sync] ошибка:', e);
                     }
                 },
 

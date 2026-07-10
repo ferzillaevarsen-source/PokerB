@@ -1296,6 +1296,7 @@
                     this.applyTheme();
                     await this.fetchExchangeRate();
                     setInterval(() => this.fetchExchangeRate(), 5 * 60 * 1000);
+                    if (this.syncToken) await this.autoSyncOnLoad();
                 },
 
                 applyTheme() {
@@ -1856,6 +1857,39 @@
                     this.applyTheme();
                     this.saveToStorage();
                     return true;
+                },
+
+                async autoSyncOnLoad() {
+                    try {
+                        // Если нет gistId — ищем по токену среди всех гистов
+                        if (!this.syncGistId) {
+                            const res = await fetch('https://api.github.com/gists?per_page=100', {
+                                headers: { 'Authorization': `token ${this.syncToken}` }
+                            });
+                            const list = await res.json();
+                            if (!Array.isArray(list)) return;
+                            const found = list.find(g => g.files && g.files['poker-bankroll.json']);
+                            if (!found) return;
+                            this.syncGistId = found.id;
+                            localStorage.setItem('pokerSyncGistId', this.syncGistId);
+                        }
+                        const res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
+                            headers: { 'Authorization': `token ${this.syncToken}` }
+                        });
+                        const json = await res.json();
+                        if (!res.ok) return;
+                        const content = json.files['poker-bankroll.json']?.content;
+                        if (!content) return;
+                        const d = JSON.parse(content);
+                        this.applyDataSnapshot(d, false);
+                        this.lastSyncTime = new Date().toISOString();
+                        localStorage.setItem('pokerSyncTime', this.lastSyncTime);
+                        this.syncStatus = 'success';
+                        this.syncMessage = 'Данные синхронизированы';
+                        this.showNotification('Данные загружены из GitHub', 'success');
+                    } catch(e) {
+                        // тихо игнорируем — не мешаем работе без сети
+                    }
                 },
 
                 async pushToCloud() {

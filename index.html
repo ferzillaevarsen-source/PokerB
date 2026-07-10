@@ -879,14 +879,92 @@
                         <i class="fa-solid fa-bars text-xl"></i><span>Меню</span><i class="fa-solid fa-chevron-up text-sm"></i>
                     </button>
                     <div class="dropdown-menu">
+                        <div class="dropdown-item" @click="showSyncModal = true"><i class="fa-brands fa-github" style="color:var(--gold)"></i><span>GitHub синхронизация</span><span x-show="syncStatus === 'success'" class="ml-auto w-2 h-2 rounded-full bg-green-400"></span></div>
+                        <div class="border-t my-1" style="border-color:var(--border)"></div>
                         <div class="dropdown-item" @click="backupData()"><i class="fa-solid fa-download text-blue-400"></i><span>Бэкап (JSON)</span></div>
                         <div class="dropdown-item" @click="importData()"><i class="fa-solid fa-upload text-green-400"></i><span>Импорт (JSON)</span></div>
                         <div class="dropdown-item" @click="exportData()"><i class="fa-solid fa-file-excel text-emerald-400"></i><span>Экспорт Excel</span></div>
                         <div class="dropdown-item" @click="exportPDF()"><i class="fa-solid fa-file-pdf text-red-400"></i><span>Экспорт PDF</span></div>
-                        <div class="border-t border-slate-700 my-1"></div>
+                        <div class="border-t my-1" style="border-color:var(--border)"></div>
                         <div class="dropdown-item text-red-400" @click="clearAllData()"><i class="fa-solid fa-trash-can text-red-400"></i><span>Сбросить всё</span></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: GitHub Sync -->
+    <div x-show="showSyncModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @click.self="showSyncModal = false">
+        <div class="glass rounded-3xl p-8 max-w-lg w-full animate-slide-up">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold flex items-center gap-3">
+                    <i class="fa-brands fa-github gradient-text text-3xl"></i>
+                    GitHub синхронизация
+                </h3>
+                <button @click="showSyncModal = false" class="text-slate-400 hover:text-white transition-colors text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Token -->
+                <div>
+                    <label class="block text-sm mb-2" style="color:var(--muted)">GitHub Personal Access Token <span class="text-xs">(scopes: gist)</span></label>
+                    <input type="password" x-model="syncToken" @change="saveSyncSettings()"
+                           class="w-full px-4 py-3 rounded-xl border text-sm"
+                           style="background:rgba(0,0,0,0.3);border-color:var(--border)"
+                           placeholder="ghp_...">
+                </div>
+
+                <!-- Gist ID -->
+                <div>
+                    <label class="block text-sm mb-2" style="color:var(--muted)">Gist ID <span class="text-xs">(заполняется автоматически при первом сохранении)</span></label>
+                    <div class="flex gap-2">
+                        <input type="text" x-model="syncGistId" @change="saveSyncSettings()"
+                               class="flex-1 px-4 py-3 rounded-xl border text-sm font-mono"
+                               style="background:rgba(0,0,0,0.3);border-color:var(--border)"
+                               placeholder="auto">
+                        <button x-show="syncGistId"
+                                @click="navigator.clipboard.writeText(syncGistId); showNotification('Скопировано', 'success')"
+                                class="px-3 py-2 rounded-xl border text-sm transition-colors hover:opacity-80"
+                                style="border-color:var(--border);color:var(--muted)"
+                                title="Скопировать Gist ID">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div x-show="syncMessage" class="px-4 py-3 rounded-xl text-sm"
+                     :class="syncStatus === 'error' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-green-500/10 text-green-400 border border-green-500/20'">
+                    <i :class="syncStatus === 'error' ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check'" class="mr-2"></i>
+                    <span x-text="syncMessage"></span>
+                </div>
+
+                <!-- Last sync time -->
+                <p x-show="lastSyncTime" class="text-xs" style="color:var(--muted)">
+                    Последняя синхронизация: <span x-text="lastSyncTime ? new Date(lastSyncTime).toLocaleString('ru-RU') : ''"></span>
+                </p>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 pt-2">
+                    <button @click="pushToCloud()"
+                            :disabled="syncStatus === 'pushing' || syncStatus === 'pulling'"
+                            class="flex-1 px-5 py-3 rounded-xl gradient-primary font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up" :class="{'animate-pulse': syncStatus === 'pushing'}"></i>
+                        <span x-text="syncStatus === 'pushing' ? 'Сохранение...' : 'Сохранить ↑'"></span>
+                    </button>
+                    <button @click="pullFromCloud()"
+                            :disabled="syncStatus === 'pushing' || syncStatus === 'pulling'"
+                            class="flex-1 px-5 py-3 rounded-xl font-semibold hover:opacity-80 transition-opacity flex items-center justify-center gap-2 border"
+                            style="border-color:var(--border);color:var(--ink)">
+                        <i class="fa-solid fa-cloud-arrow-down" :class="{'animate-pulse': syncStatus === 'pulling'}"></i>
+                        <span x-text="syncStatus === 'pulling' ? 'Загрузка...' : 'Загрузить ↓'"></span>
+                    </button>
+                </div>
+
+                <p class="text-xs leading-relaxed" style="color:var(--muted)">
+                    Данные сохраняются в <b>приватный</b> GitHub Gist. Токен хранится только в вашем браузере и не попадает в экспорт.
+                    Создать токен: <b>GitHub → Settings → Developer settings → Personal access tokens → gist</b>
+                </p>
             </div>
         </div>
     </div>
@@ -1150,6 +1228,12 @@
                 newRoomName: '',
                 newRoomCurrency: 'USD',
                 autoSaved: false,
+                showSyncModal: false,
+                syncToken: '',
+                syncGistId: '',
+                syncStatus: 'idle',
+                syncMessage: '',
+                lastSyncTime: '',
                 alerts: [],
                 draggedIndex: null,
                 dragOverIndex: null,
@@ -1164,6 +1248,9 @@
                 ],
 
                 async initApp() {
+                    this.syncToken  = localStorage.getItem('pokerSyncToken')  || '';
+                    this.syncGistId = localStorage.getItem('pokerSyncGistId') || '';
+                    this.lastSyncTime = localStorage.getItem('pokerSyncTime') || '';
                     const saved = localStorage.getItem('pokerBankrollData');
                     if (saved) {
                         try {
@@ -1739,12 +1826,105 @@
                     }
                 },
 
+                getDataSnapshot() {
+                    return {
+                        exchangeRate: this.exchangeRate,
+                        sites: this.sites,
+                        history: this.history,
+                        baseDeposits: this.baseDeposits,
+                        goals: this.goals,
+                        calendarDate: this.calendarDate.toISOString(),
+                        currentTheme: this.currentTheme
+                    };
+                },
+
+                applyDataSnapshot(d, confirm = true) {
+                    if (confirm && !window.confirm('Данные из облака заменят текущие. Продолжить?')) return false;
+                    this.exchangeRate  = d.exchangeRate  || 90.50;
+                    this.sites         = d.sites         || this.sites;
+                    this.history       = d.history       || [];
+                    this.baseDeposits  = d.baseDeposits  || {};
+                    this.goals         = d.goals         || this.goals;
+                    const legacyThemes = {neon:'izumrud',cyberpunk:'izumrud',blue:'polnoch',classic:'izumrud',poker:'izumrud',casino:'bordo'};
+                    const t = d.currentTheme || 'izumrud';
+                    this.currentTheme = legacyThemes[t] || t;
+                    if (d.calendarDate) this.calendarDate = new Date(d.calendarDate);
+                    this.sites.forEach(s => { s.newWithdrawal = ''; });
+                    this.applyTheme();
+                    this.saveToStorage();
+                    return true;
+                },
+
+                async pushToCloud() {
+                    if (!this.syncToken) { this.showNotification('Введите GitHub токен', 'warning'); return; }
+                    this.syncStatus = 'pushing';
+                    try {
+                        const content = JSON.stringify(this.getDataSnapshot(), null, 2);
+                        const payload = {
+                            description: 'Poker Bankroll Manager — автосинхронизация',
+                            public: false,
+                            files: { 'poker-bankroll.json': { content } }
+                        };
+                        const isNew = !this.syncGistId;
+                        const url    = isNew ? 'https://api.github.com/gists'
+                                             : `https://api.github.com/gists/${this.syncGistId}`;
+                        const method = isNew ? 'POST' : 'PATCH';
+                        const res = await fetch(url, {
+                            method,
+                            headers: { 'Authorization': `token ${this.syncToken}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.message || res.status);
+                        this.syncGistId = json.id;
+                        this.lastSyncTime = new Date().toISOString();
+                        localStorage.setItem('pokerSyncToken',  this.syncToken);
+                        localStorage.setItem('pokerSyncGistId', this.syncGistId);
+                        localStorage.setItem('pokerSyncTime',   this.lastSyncTime);
+                        this.syncStatus = 'success';
+                        this.syncMessage = isNew ? 'Гист создан и данные загружены' : 'Данные сохранены в GitHub';
+                        this.showNotification(this.syncMessage, 'success');
+                    } catch(e) {
+                        this.syncStatus = 'error';
+                        this.syncMessage = 'Ошибка: ' + e.message;
+                        this.showNotification(this.syncMessage, 'warning');
+                    }
+                },
+
+                async pullFromCloud() {
+                    if (!this.syncToken)  { this.showNotification('Введите GitHub токен', 'warning'); return; }
+                    if (!this.syncGistId) { this.showNotification('Нет ID гиста — сначала сохраните данные', 'warning'); return; }
+                    this.syncStatus = 'pulling';
+                    try {
+                        const res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
+                            headers: { 'Authorization': `token ${this.syncToken}` }
+                        });
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.message || res.status);
+                        const content = json.files['poker-bankroll.json']?.content;
+                        if (!content) throw new Error('Файл poker-bankroll.json не найден в гисте');
+                        const d = JSON.parse(content);
+                        if (!this.applyDataSnapshot(d, true)) { this.syncStatus = 'idle'; return; }
+                        this.lastSyncTime = new Date().toISOString();
+                        localStorage.setItem('pokerSyncTime', this.lastSyncTime);
+                        this.syncStatus = 'success';
+                        this.syncMessage = 'Данные загружены из GitHub';
+                        this.showNotification(this.syncMessage, 'success');
+                    } catch(e) {
+                        this.syncStatus = 'error';
+                        this.syncMessage = 'Ошибка: ' + e.message;
+                        this.showNotification(this.syncMessage, 'warning');
+                    }
+                },
+
+                saveSyncSettings() {
+                    localStorage.setItem('pokerSyncToken',  this.syncToken);
+                    localStorage.setItem('pokerSyncGistId', this.syncGistId);
+                    this.showNotification('Настройки синхронизации сохранены', 'success');
+                },
+
                 backupData() {
-                    const blob = new Blob([JSON.stringify({
-                        exchangeRate: this.exchangeRate, sites: this.sites, history: this.history,
-                        baseDeposits: this.baseDeposits, goals: this.goals,
-                        calendarDate: this.calendarDate.toISOString(), currentTheme: this.currentTheme
-                    }, null, 2)], { type: 'application/json' });
+                    const blob = new Blob([JSON.stringify(this.getDataSnapshot(), null, 2)], { type: 'application/json' });
                     const a = document.createElement('a');
                     a.href = URL.createObjectURL(blob);
                     a.download = `poker-backup-${new Date().toISOString().split('T')[0]}.json`;
@@ -1758,17 +1938,8 @@
                     r.onload = (ev) => {
                         try {
                             const d = JSON.parse(ev.target.result);
-                            if (!confirm('Импортировать данные? Текущие данные будут заменены.')) return;
-                            this.exchangeRate  = d.exchangeRate  || 90.50;
-                            this.sites         = d.sites         || this.sites;
-                            this.history       = d.history       || [];
-                            this.baseDeposits  = d.baseDeposits  || {};
-                            this.goals         = d.goals         || this.goals;
-                            this.currentTheme  = d.currentTheme  || 'izumrud';
-                            if (d.calendarDate) this.calendarDate = new Date(d.calendarDate);
-                            this.applyTheme();
-                            this.saveToStorage();
-                            this.showNotification('Данные импортированы', 'success');
+                            if (this.applyDataSnapshot(d, true))
+                                this.showNotification('Данные импортированы', 'success');
                         } catch(err) {
                             this.showNotification('Ошибка чтения файла', 'warning');
                         }

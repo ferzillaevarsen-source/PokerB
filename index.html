@@ -1241,7 +1241,8 @@
 
                 async initApp() {
                     this.syncToken  = ['ghp_nTSgGLACQ', 'rYd1p9yr8nqW', 'yaeJQWXoB3nZWGn'].join('');
-                    this.syncGistId = localStorage.getItem('pokerSyncGistId') || '937b54e82f9eb81715792eef76e06c85';
+                    this.syncGistId = '937b54e82f9eb81715792eef76e06c85';
+                    localStorage.setItem('pokerSyncGistId', this.syncGistId);
                     this.lastSyncTime = localStorage.getItem('pokerSyncTime') || '';
                     const saved = localStorage.getItem('pokerBankrollData');
                     if (saved) {

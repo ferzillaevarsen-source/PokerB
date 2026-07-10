@@ -1851,20 +1851,25 @@
 
                 async autoSyncOnLoad() {
                     try {
+                        // 1. Найти гист
                         const findGist = async () => {
-                            const res = await fetch('https://api.github.com/gists?per_page=100', {
+                            const r = await fetch('https://api.github.com/gists?per_page=100', {
                                 headers: { 'Authorization': `token ${this.syncToken}` }
                             });
-                            const list = await res.json();
-                            if (!Array.isArray(list)) return null;
-                            return list.find(g => g.files && g.files['poker-bankroll.json']) || null;
+                            const list = await r.json();
+                            return Array.isArray(list)
+                                ? list.find(g => g.files?.['poker-bankroll.json']) || null
+                                : null;
                         };
 
-                        // Если нет gistId или он выглядит неправильно (например, содержит токен) — ищем заново
                         const badId = !this.syncGistId || this.syncGistId.startsWith('ghp_') || this.syncGistId.length < 20;
                         if (badId) {
                             const found = await findGist();
-                            if (!found) return;
+                            if (!found) {
+                                // Гиста нет вообще — пушим локальные данные
+                                await this.pushToCloud();
+                                return;
+                            }
                             this.syncGistId = found.id;
                             localStorage.setItem('pokerSyncGistId', this.syncGistId);
                         }
@@ -1872,11 +1877,9 @@
                         let res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
                             headers: { 'Authorization': `token ${this.syncToken}` }
                         });
-
-                        // Гист не найден по сохранённому ID — ищем заново
                         if (res.status === 404) {
                             const found = await findGist();
-                            if (!found) return;
+                            if (!found) { await this.pushToCloud(); return; }
                             this.syncGistId = found.id;
                             localStorage.setItem('pokerSyncGistId', this.syncGistId);
                             res = await fetch(`https://api.github.com/gists/${this.syncGistId}`, {
@@ -1886,26 +1889,62 @@
 
                         const json = await res.json();
                         if (!res.ok) return;
-                        const content = json.files['poker-bankroll.json']?.content;
-                        if (!content) return;
-                        const d = JSON.parse(content);
+                        const content = json.files?.['poker-bankroll.json']?.content;
+                        if (!content) { await this.pushToCloud(); return; }
 
-                        const cloudSessions = d.history?.length || 0;
-                        const localSessions = this.history?.length || 0;
-                        if (cloudSessions < localSessions) {
-                            // Локальных данных больше — пушим в облако вместо загрузки
-                            await this.pushToCloud();
-                            return;
+                        const cloudData = JSON.parse(content);
+                        const cloudSessions = cloudData.history?.length || 0;
+
+                        // 2. Читаем локальные данные напрямую из localStorage (надёжнее чем this.history)
+                        const localRaw = localStorage.getItem('pokerBankrollData');
+                        const localData = localRaw ? JSON.parse(localRaw) : null;
+                        const localSessions = localData?.history?.length || 0;
+
+                        if (localSessions >= cloudSessions && localSessions > 0) {
+                            // Локальных данных столько же или больше — пушим локальные
+                            await this.pushRawData(localData);
+                        } else if (cloudSessions > localSessions) {
+                            // В облаке больше данных — загружаем
+                            this.applyDataSnapshot(cloudData, false);
+                            this.lastSyncTime = new Date().toISOString();
+                            localStorage.setItem('pokerSyncTime', this.lastSyncTime);
+                            this.syncStatus = 'success';
+                            this.syncMessage = 'Данные загружены из GitHub';
+                            this.showNotification('Данные загружены из GitHub', 'success');
                         }
-
-                        this.applyDataSnapshot(d, false);
-                        this.lastSyncTime = new Date().toISOString();
-                        localStorage.setItem('pokerSyncTime', this.lastSyncTime);
-                        this.syncStatus = 'success';
-                        this.syncMessage = 'Данные синхронизированы';
-                        this.showNotification('Данные загружены из GitHub', 'success');
                     } catch(e) {
-                        // тихо игнорируем — не мешаем работе без сети
+                        console.warn('Sync error:', e);
+                    }
+                },
+
+                async pushRawData(data) {
+                    if (!this.syncToken) return;
+                    try {
+                        const content = JSON.stringify(data, null, 2);
+                        const payload = {
+                            description: 'Poker Bankroll Manager — автосинхронизация',
+                            public: false,
+                            files: { 'poker-bankroll.json': { content } }
+                        };
+                        const isNew = !this.syncGistId;
+                        const url    = isNew ? 'https://api.github.com/gists'
+                                             : `https://api.github.com/gists/${this.syncGistId}`;
+                        const res = await fetch(url, {
+                            method: isNew ? 'POST' : 'PATCH',
+                            headers: { 'Authorization': `token ${this.syncToken}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const gjson = await res.json();
+                        if (!res.ok) throw new Error(gjson.message);
+                        this.syncGistId = gjson.id;
+                        this.lastSyncTime = new Date().toISOString();
+                        localStorage.setItem('pokerSyncGistId', this.syncGistId);
+                        localStorage.setItem('pokerSyncTime',   this.lastSyncTime);
+                        this.syncStatus = 'success';
+                        this.syncMessage = 'Данные сохранены в GitHub';
+                        this.showNotification('Данные сохранены в GitHub', 'success');
+                    } catch(e) {
+                        console.warn('Push error:', e);
                     }
                 },
 
@@ -1913,7 +1952,10 @@
                     if (!this.syncToken) { this.showNotification('Введите GitHub токен', 'warning'); return; }
                     this.syncStatus = 'pushing';
                     try {
-                        const content = JSON.stringify(this.getDataSnapshot(), null, 2);
+                        // Берём данные из localStorage (всегда актуальны после saveToStorage)
+                        const localRaw = localStorage.getItem('pokerBankrollData');
+                        const snapshot = localRaw ? JSON.parse(localRaw) : this.getDataSnapshot();
+                        const content = JSON.stringify(snapshot, null, 2);
                         const payload = {
                             description: 'Poker Bankroll Manager — автосинхронизация',
                             public: false,

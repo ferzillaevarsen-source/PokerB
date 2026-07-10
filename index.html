@@ -314,48 +314,6 @@
             </template>
         </div>
 
-        <!-- Bankroll Chart -->
-        <div class="mb-8 animate-slide-up" style="animation-delay:0.5s">
-            <div class="glass rounded-3xl p-8">
-                <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
-                            <i class="fa-solid fa-chart-line text-xl"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold">📈 График банкролла</h2>
-                            <p class="text-sm" style="color:var(--muted)">
-                                Накопленная прибыль, ₽
-                                <template x-if="chartRangeLabels">
-                                    <span class="font-semibold" :style="'color:' + (chartRangeLabels.total >= 0 ? 'var(--pos)' : 'var(--neg)')"
-                                          x-text="' · ' + (chartRangeLabels.total >= 0 ? '+' : '') + Math.round(chartRangeLabels.total).toLocaleString('ru-RU') + ' ₽'"></span>
-                                </template>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button @click="chartPeriod = '30'"
-                                class="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-                                :class="chartPeriod === '30' ? 'gradient-primary' : 'border'"
-                                :style="chartPeriod === '30' ? '' : 'border-color:var(--border);color:var(--muted)'">30 дней</button>
-                        <button @click="chartPeriod = 'all'"
-                                class="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-                                :class="chartPeriod === 'all' ? 'gradient-primary' : 'border'"
-                                :style="chartPeriod === 'all' ? '' : 'border-color:var(--border);color:var(--muted)'">Всё время</button>
-                    </div>
-                </div>
-                <div x-show="chartSVG" x-html="chartSVG"></div>
-                <div x-show="chartRangeLabels" class="flex justify-between text-xs mt-2" style="color:var(--muted)">
-                    <span x-text="chartRangeLabels ? chartRangeLabels.from : ''"></span>
-                    <span x-text="chartRangeLabels ? chartRangeLabels.to : ''"></span>
-                </div>
-                <div x-show="!chartSVG" class="text-center py-10" style="color:var(--muted)">
-                    <i class="fa-solid fa-chart-line text-3xl mb-3 opacity-40"></i>
-                    <p>Сохраните хотя бы 2 сессии, чтобы увидеть график</p>
-                </div>
-            </div>
-        </div>
-
         <!-- Room Summary -->
         <div class="mb-8 animate-slide-up" style="animation-delay:0.6s">
             <div class="glass rounded-3xl p-8">
@@ -526,6 +484,82 @@
                                 </div>
                             </template>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Bankroll Chart -->
+                <div class="glass rounded-3xl p-8">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center">
+                                <i class="fa-solid fa-chart-line text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold">📈 Банкролл</h2>
+                                <p class="text-sm" style="color:var(--muted)">
+                                    Накопленная прибыль, ₽
+                                    <template x-if="chartRangeLabels">
+                                        <span class="font-bold" :style="'color:' + (chartRangeLabels.total >= 0 ? 'var(--pos)' : 'var(--neg)')"
+                                              x-text="' · ' + (chartRangeLabels.total >= 0 ? '+' : '') + Math.round(chartRangeLabels.total).toLocaleString('ru-RU') + ' ₽'"></span>
+                                    </template>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="chartPeriod = '30'"
+                                    class="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                                    :class="chartPeriod === '30' ? 'gradient-primary' : 'border'"
+                                    :style="chartPeriod === '30' ? '' : 'border-color:var(--border);color:var(--muted)'">30 дней</button>
+                            <button @click="chartPeriod = 'all'"
+                                    class="px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                                    :class="chartPeriod === 'all' ? 'gradient-primary' : 'border'"
+                                    :style="chartPeriod === 'all' ? '' : 'border-color:var(--border);color:var(--muted)'">Всё время</button>
+                        </div>
+                    </div>
+
+                    <div x-show="chartSVG" x-html="chartSVG"></div>
+
+                    <!-- Мини-статистика периода -->
+                    <template x-if="chartStats">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5">
+                            <div class="rounded-xl p-3 border" style="border-color:var(--border);background:rgba(0,0,0,0.2)">
+                                <p class="text-xs mb-1" style="color:var(--muted)"><i class="fa-solid fa-mountain mr-1" style="color:var(--gold)"></i>Пик банкролла</p>
+                                <p class="font-bold text-sm" style="color:var(--gold2)" x-text="'+' + Math.round(chartStats.peak).toLocaleString('ru-RU') + ' ₽'"></p>
+                                <p class="text-xs" style="color:var(--muted)" x-text="formatDate(chartStats.peakDate)"></p>
+                            </div>
+                            <div class="rounded-xl p-3 border" style="border-color:var(--border);background:rgba(0,0,0,0.2)">
+                                <p class="text-xs mb-1" style="color:var(--muted)"><i class="fa-solid fa-arrow-trend-down mr-1" style="color:var(--neg)"></i>Просадка от пика</p>
+                                <p class="font-bold text-sm" :style="'color:' + (chartStats.drawdown > 0 ? 'var(--neg)' : 'var(--pos)')"
+                                   x-text="chartStats.drawdown > 0 ? '−' + Math.round(chartStats.drawdown).toLocaleString('ru-RU') + ' ₽' : 'Вы на пике!'"></p>
+                                <p class="text-xs" style="color:var(--muted)" x-text="chartStats.drawdown > 0 ? chartStats.daysFromPeak + ' дн. назад' : '🔥'"></p>
+                            </div>
+                            <div class="rounded-xl p-3 border" style="border-color:var(--border);background:rgba(0,0,0,0.2)">
+                                <p class="text-xs mb-1" style="color:var(--muted)"><i class="fa-solid fa-percent mr-1" style="color:var(--pos)"></i>Плюсовых дней</p>
+                                <p class="font-bold text-sm" x-text="chartStats.winRate + '%'"></p>
+                                <p class="text-xs" style="color:var(--muted)" x-text="chartStats.wins + ' из ' + chartStats.total"></p>
+                            </div>
+                            <div class="rounded-xl p-3 border" style="border-color:var(--border);background:rgba(0,0,0,0.2)">
+                                <p class="text-xs mb-1" style="color:var(--muted)"><i class="fa-solid fa-arrow-up mr-1" style="color:var(--pos)"></i>Лучший день</p>
+                                <p class="font-bold text-sm" style="color:var(--pos)" x-text="'+' + Math.round(chartStats.best.delta).toLocaleString('ru-RU') + ' ₽'"></p>
+                                <p class="text-xs" style="color:var(--muted)" x-text="formatDate(chartStats.best.date)"></p>
+                            </div>
+                            <div class="rounded-xl p-3 border" style="border-color:var(--border);background:rgba(0,0,0,0.2)">
+                                <p class="text-xs mb-1" style="color:var(--muted)"><i class="fa-solid fa-arrow-down mr-1" style="color:var(--neg)"></i>Худший день</p>
+                                <p class="font-bold text-sm" style="color:var(--neg)" x-text="Math.round(chartStats.worst.delta).toLocaleString('ru-RU') + ' ₽'"></p>
+                                <p class="text-xs" style="color:var(--muted)" x-text="formatDate(chartStats.worst.date)"></p>
+                            </div>
+                            <div class="rounded-xl p-3 border" style="border-color:var(--border);background:rgba(0,0,0,0.2)">
+                                <p class="text-xs mb-1" style="color:var(--muted)"><i class="fa-solid fa-scale-balanced mr-1" style="color:var(--gold)"></i>Средний день</p>
+                                <p class="font-bold text-sm" :style="'color:' + (chartStats.avg >= 0 ? 'var(--pos)' : 'var(--neg)')"
+                                   x-text="(chartStats.avg >= 0 ? '+' : '') + Math.round(chartStats.avg).toLocaleString('ru-RU') + ' ₽'"></p>
+                                <p class="text-xs" style="color:var(--muted)">в среднем</p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div x-show="!chartSVG" class="text-center py-10" style="color:var(--muted)">
+                        <i class="fa-solid fa-chart-line text-3xl mb-3 opacity-40"></i>
+                        <p>Сохраните хотя бы 2 сессии, чтобы увидеть график</p>
                     </div>
                 </div>
             </div>
@@ -1516,40 +1550,103 @@
                     };
                 },
 
+                get chartStats() {
+                    const pts = this.chartData;
+                    if (pts.length < 2) return null;
+                    let peak = -Infinity, peakDate = null, peakIdx = 0;
+                    pts.forEach((p, i) => { if (p.value > peak) { peak = p.value; peakDate = p.date; peakIdx = i; } });
+                    const last  = pts[pts.length - 1].value;
+                    const best  = pts.reduce((m, p) => p.delta > m.delta ? p : m);
+                    const worst = pts.reduce((m, p) => p.delta < m.delta ? p : m);
+                    const wins  = pts.filter(p => p.delta > 0).length;
+                    const daysFromPeak = Math.round((new Date(pts[pts.length - 1].date) - new Date(peakDate)) / 86400000);
+                    return {
+                        peak, peakDate, peakIdx,
+                        drawdown: peak - last,
+                        daysFromPeak,
+                        best, worst,
+                        wins, total: pts.length,
+                        winRate: Math.round(wins / pts.length * 100),
+                        avg: pts.reduce((a, p) => a + p.delta, 0) / pts.length
+                    };
+                },
+
                 get chartSVG() {
                     const pts = this.chartData;
                     if (pts.length < 2) return '';
-                    const W = 800, H = 260, padX = 14, padY = 18;
+                    const W = 800, H = 320, padL = 62, padR = 16, padT = 20, padB = 34;
                     const vals = pts.map(p => p.value); vals.push(0);
                     const min = Math.min(...vals), max = Math.max(...vals);
                     const range = (max - min) || 1;
-                    const X = i => (padX + (W - 2 * padX) * i / (pts.length - 1)).toFixed(1);
-                    const Y = v => (padY + (H - 2 * padY) * (1 - (v - min) / range)).toFixed(1);
+                    const X = i => (padL + (W - padL - padR) * i / (pts.length - 1)).toFixed(1);
+                    const Y = v => (padT + (H - padT - padB) * (1 - (v - min) / range)).toFixed(1);
+                    const fmt      = n => Math.round(n).toLocaleString('ru-RU');
+                    const fmtShort = n => Math.abs(n) >= 1e6 ? (n/1e6).toFixed(1).replace('.',',') + 'М'
+                                        : Math.abs(n) >= 1000 ? Math.round(n/1000) + 'к'
+                                        : Math.round(n).toString();
                     const line  = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.value)}`).join(' ');
-                    const area  = `${line} L${X(pts.length - 1)},${H - padY} L${X(0)},${H - padY} Z`;
+                    const area  = `${line} L${X(pts.length - 1)},${H - padB} L${X(0)},${H - padB} Z`;
                     const zeroY = Y(0);
                     const color = pts[pts.length - 1].value >= 0 ? '#d4af37' : '#e0705f';
+                    const gridColor = 'rgba(147,168,155,0.15)';
+                    const txtColor  = 'rgba(147,168,155,0.85)';
+
+                    // Горизонтальная сетка с подписями значений (5 линий)
+                    let grid = '';
+                    for (let k = 0; k <= 4; k++) {
+                        const v = min + range * k / 4;
+                        const y = Y(v);
+                        grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="${gridColor}" stroke-width="1"/>`;
+                        grid += `<text x="${padL - 8}" y="${+y + 4}" text-anchor="end" font-size="12" fill="${txtColor}" font-family="Inter,sans-serif">${fmtShort(v)}</text>`;
+                    }
+
+                    // Подписи дат по оси X: первая, четверть, середина, три четверти, последняя
+                    let xLabels = '';
+                    const dateFmt = d => new Date(d).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                    [0, 0.25, 0.5, 0.75, 1].forEach(f => {
+                        const i = Math.round((pts.length - 1) * f);
+                        const anchor = f === 0 ? 'start' : f === 1 ? 'end' : 'middle';
+                        xLabels += `<text x="${X(i)}" y="${H - 10}" text-anchor="${anchor}" font-size="12" fill="${txtColor}" font-family="Inter,sans-serif">${dateFmt(pts[i].date)}</text>`;
+                    });
+
                     // Точки с нативными tooltip — только если их не слишком много
                     let dots = '';
                     if (pts.length <= 62) {
                         dots = pts.map((p, i) => {
                             const d    = new Date(p.date).toLocaleDateString('ru-RU');
                             const sign = p.delta >= 0 ? '+' : '';
-                            const fmt  = n => Math.round(n).toLocaleString('ru-RU');
-                            return `<circle cx="${X(i)}" cy="${Y(p.value)}" r="3.5" fill="#eed37c" stroke="rgba(0,0,0,0.5)" stroke-width="1" style="cursor:pointer"><title>${d}
+                            return `<circle cx="${X(i)}" cy="${Y(p.value)}" r="4" fill="${p.delta >= 0 ? '#5bcd8f' : '#e0705f'}" stroke="rgba(0,0,0,0.55)" stroke-width="1.2" style="cursor:pointer"><title>${d}
 За день: ${sign}${fmt(p.delta)} ₽
 Всего: ${fmt(p.value)} ₽</title></circle>`;
                         }).join('');
                     }
+
+                    // Маркер пика банкролла
+                    const stats = this.chartStats;
+                    let peakMark = '';
+                    if (stats && stats.peakIdx > 0 && stats.peakIdx < pts.length - 1) {
+                        const px = X(stats.peakIdx), py = Y(stats.peak);
+                        peakMark = `<circle cx="${px}" cy="${py}" r="6.5" fill="none" stroke="#eed37c" stroke-width="2"/>
+<text x="${px}" y="${+py - 12}" text-anchor="middle" font-size="11" fill="#eed37c" font-family="Inter,sans-serif">пик ${fmtShort(stats.peak)}</text>`;
+                    }
+
+                    // Последняя точка — акцент
+                    const lx = X(pts.length - 1), ly = Y(pts[pts.length - 1].value);
+                    const lastMark = `<circle cx="${lx}" cy="${ly}" r="5.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+
                     return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="bankrollFill" x1="0" y1="0" x2="0" y2="1">
 <stop offset="0%" stop-color="${color}" stop-opacity="0.35"/>
 <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
 </linearGradient></defs>
-<line x1="0" y1="${zeroY}" x2="${W}" y2="${zeroY}" stroke="rgba(147,168,155,0.35)" stroke-width="1" stroke-dasharray="4 4"/>
+${grid}
+<line x1="${padL}" y1="${zeroY}" x2="${W - padR}" y2="${zeroY}" stroke="rgba(238,211,124,0.5)" stroke-width="1.2" stroke-dasharray="5 4"/>
 <path d="${area}" fill="url(#bankrollFill)"/>
 <path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-${dots}</svg>`;
+${dots}
+${peakMark}
+${lastMark}
+${xLabels}</svg>`;
                 },
 
                 addAlert(type, title, message) {

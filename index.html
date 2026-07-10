@@ -866,8 +866,9 @@
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-wrap justify-center items-center gap-3">
                 <button @click="showSaveConfirmModal = true" class="px-8 py-4 rounded-2xl gradient-primary hover:opacity-90 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-3 transition-all">
-                    <i class="fa-solid fa-floppy-disk text-xl"></i>
-                    <span x-text="sessionDate === new Date().toISOString().split('T')[0] ? 'Сохранить за сегодня' : 'Сохранить за ' + new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'short'})"></span>
+                    <i x-show="syncStatus !== 'pushing'" class="fa-solid fa-floppy-disk text-xl"></i>
+                    <i x-show="syncStatus === 'pushing'" class="fa-brands fa-github text-xl animate-pulse"></i>
+                    <span x-text="syncStatus === 'pushing' ? 'Синхронизация...' : (sessionDate === new Date().toISOString().split('T')[0] ? 'Сохранить за сегодня' : 'Сохранить за ' + new Date(sessionDate + 'T12:00:00').toLocaleDateString('ru-RU', {day:'numeric', month:'short'}))"></span>
                 </button>
                 <button @click="copyDailyResult()" title="Скопировать результат дня для Telegram"
                         class="px-6 py-4 rounded-2xl bg-slate-700 hover:bg-slate-600 font-bold text-lg shadow-lg hover:scale-105 flex items-center gap-2 transition-all">
@@ -1724,6 +1725,7 @@
                     this.sessionDate = new Date().toISOString().split('T')[0];
                     this.saveToStorage();
                     this.checkAlerts();
+                    if (this.syncToken) this.pushToCloud();
                 },
 
                 async fetchExchangeRate() {
